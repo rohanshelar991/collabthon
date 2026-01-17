@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Collabthon - Connect with talented students in your college. Find collaborators for projects, freelancers for your needs, or expand your network.">
+    <meta name="keywords" content="college collaboration, student projects, team matching, freelance students">
+    <meta name="author" content="Collabthon Platform">
+    <title>Collabthon - College Collaboration Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤝</text></svg>">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 relative overflow-hidden">
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:text-slate-900 focus:px-4 focus:py-2 focus:rounded-lg focus:ring-2 focus:ring-primary-500">
+        Skip to main content
+    </a>
+    <!-- Animated Background Elements -->
+    <div class="absolute inset-0 -z-10 overflow-hidden">
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div class="absolute top-1/3 right-1/4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div class="absolute bottom-1/4 left-1/3 w-80 h-80 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+    </div>
+    
+    <!-- Header Container -->
+    <header class="header-container sticky top-0 z-50 border-b border-slate-200/30 dark:border-slate-700/30" role="banner">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="header-glow"></div>
+        <div class="header-particles">
+            <div class="particle particle-1"></div>
+            <div class="particle particle-2"></div>
+            <div class="particle particle-3"></div>
+            <div class="particle particle-4"></div>
+            <div class="particle particle-5"></div>
+            <div class="particle particle-6"></div>
+            <div class="particle particle-7"></div>
+        </div>
+        
+        <!-- Navigation Bar -->
+        <nav class="nav-bar" role="navigation" aria-label="Main navigation">
+            <div class="nav-container">
+                <div class="flex items-center">
+                    <a href="#home" class="brand-logo" aria-label="Collabthon homepage">
+                        <div class="logo-wrapper w-12 h-12 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-2xl flex items-center justify-center shadow-lg animate-hover-lift dark:shadow-white/10" aria-hidden="true">
+                            <span class="text-white font-bold text-xl">🤝</span>
+                        </div>
+                        <span class="brand-text brand-pulse text-slate-900 dark:text-white">
+                            Collabthon
+                        </span>
+                    </a>
+                    
+                    <!-- Right side of header -->
+                    <div class="flex items-center space-x-4">
+                        <a href="#login" class="login-link px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors auth-button" aria-label="Login to your account" style="display:none;">
+                            <span class="material-symbols-outlined mr-1 text-base">login</span>
+                            Login
+                        </a>
+                        <div class="user-menu flex items-center space-x-4" style="display:none;">
+                            <a href="#dashboard" class="dashboard-link px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                                <span class="material-symbols-outlined mr-1 text-base">dashboard</span>
+                                Dashboard
+                            </a>
+                            <button id="logoutButton" class="logout-link px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                                <span class="material-symbols-outlined mr-1 text-base">logout</span>
+                                Logout
+                            </button>
+                            <span class="user-name text-sm text-slate-600 dark:text-slate-300"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation - 5 Direct Navigation Buttons -->
+                <div class="nav-menu hidden md:flex items-center space-x-1" role="menubar">
+                    <a href="#home" class="nav-item active" data-page="home" role="menuitem" aria-current="page">
+                        <div class="inline-flex items-center">
+                            <span class="material-symbols-outlined mr-2" aria-hidden="true">home</span>
+                            <span>Home</span>
+                        </div>
+                    </a>
+                    <a href="#portfolio" class="nav-item" data-page="portfolio" role="menuitem">
+                        <div class="inline-flex items-center">
+                            <span class="material-symbols-outlined mr-2" aria-hidden="true">groups</span>
+                            <span>Students</span>
+                        </div>
+                    </a>
+                    <a href="#services" class="nav-item" data-page="services" role="menuitem">
+                        <div class="inline-flex items-center">
+                            <span class="material-symbols-outlined mr-2" aria-hidden="true">work</span>
+                            <span>Find Talent</span>
+                        </div>
+                    </a>
+                    <a href="#about" class="nav-item" data-page="about" role="menuitem">
+                        <div class="inline-flex items-center">
+                            <span class="material-symbols-outlined mr-2" aria-hidden="true">info</span>
+                            <span>About</span>
+                        </div>
+                    </a>
+                    <a href="#contact" class="nav-item" data-page="contact" role="menuitem">
+                        <div class="inline-flex items-center">
+                            <span class="material-symbols-outlined mr-2" aria-hidden="true">chat</span>
+                            <span>Collaborate</span>
+                        </div>
+                    </a>
+                    
+                    <div class="flex space-x-2" role="group" aria-label="Theme controls">
+                        <!-- Dark Mode Toggle -->
+                        <button class="nav-item theme-toggle" id="themeToggle" aria-label="Toggle dark mode" aria-pressed="false">
+                            <div class="inline-flex items-center">
+                                <span class="material-symbols-outlined theme-icon" aria-hidden="true">dark_mode</span>
+                                <span class="ml-2 theme-text">Dark</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center space-x-4">
+                    <button class="mobile-menu-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobileMenu">
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation -->
+        <div class="mobile-nav md:hidden bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 overflow-hidden hidden" id="mobileMenu" role="dialog" aria-labelledby="mobileMenuTitle">
+            <div class="px-4 py-4 space-y-2">
+                <h2 id="mobileMenuTitle" class="sr-only">Mobile Navigation Menu</h2>
+                <a href="#home" class="mobile-nav-item block px-4 py-3 rounded-xl font-medium flex items-center space-x-3 transition-all duration-300 bg-gradient-to-r from-primary-100 to-secondary-100 text-primary-700 dark:from-primary-900/30 dark:to-secondary-900/30 dark:text-primary-300 hover:from-primary-200 hover:to-secondary-200 dark:hover:from-primary-900/40 dark:hover:to-secondary-900/40" data-page="home">
+                    <span class="material-symbols-outlined" aria-hidden="true">home</span>
+                    <span>Home</span>
+                </a>
+                <a href="#portfolio" class="mobile-nav-item block px-4 py-3 rounded-xl font-medium flex items-center space-x-3 transition-all duration-300 text-slate-700 hover:bg-gradient-to-r hover:from-primary-50 hover:to-secondary-50 dark:text-slate-300 dark:hover:bg-slate-700/30" data-page="portfolio">
+                    <span class="material-symbols-outlined" aria-hidden="true">groups</span>
+                    <span>Students</span>
+                </a>
+                <a href="#services" class="mobile-nav-item block px-4 py-3 rounded-xl font-medium flex items-center space-x-3 transition-all duration-300 text-slate-700 hover:bg-gradient-to-r hover:from-primary-50 hover:to-secondary-50 dark:text-slate-300 dark:hover:bg-slate-700/30" data-page="services">
+                    <span class="material-symbols-outlined" aria-hidden="true">work</span>
+                    <span>Find Talent</span>
+                </a>
+                <a href="#about" class="mobile-nav-item block px-4 py-3 rounded-xl font-medium flex items-center space-x-3 transition-all duration-300 text-slate-700 hover:bg-gradient-to-r hover:from-primary-50 hover:to-secondary-50 dark:text-slate-300 dark:hover:bg-slate-700/30" data-page="about">
+                    <span class="material-symbols-outlined" aria-hidden="true">info</span>
+                    <span>About</span>
+                </a>
+                <a href="#contact" class="mobile-nav-item block px-4 py-3 rounded-xl font-medium flex items-center space-x-3 transition-all duration-300 text-slate-700 hover:bg-gradient-to-r hover:from-primary-50 hover:to-secondary-50 dark:text-slate-300 dark:hover:bg-slate-700/30" data-page="contact">
+                    <span class="material-symbols-outlined" aria-hidden="true">chat</span>
+                    <span>Collaborate</span>
+                </a>
+                <div class="pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
+                    <button class="mobile-theme-toggle w-full px-4 py-3 rounded-xl font-medium flex items-center space-x-3 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700" id="mobileThemeToggle" aria-label="Toggle dark mode">
+                        <span class="material-symbols-outlined theme-icon" aria-hidden="true">dark_mode</span>
+                        <span class="theme-text">Dark Mode</span>
+                    </button>
+                </div>
+                <div class="pt-2 mt-2 border-t border-slate-200 dark:border-slate-700">
+                    <a href="#login" class="mobile-login-link block w-full text-left px-4 py-3 rounded-xl font-medium flex items-center space-x-3 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 auth-button" aria-label="Login to your account" style="display:none;">
+                        <span class="material-symbols-outlined" aria-hidden="true">login</span>
+                        <span>Login</span>
+                    </a>
+                    <div class="mobile-user-menu pt-2 border-t border-slate-200 dark:border-slate-700" style="display:none;">
+                        <a href="#dashboard" class="mobile-dashboard-link block w-full text-left px-4 py-3 rounded-xl font-medium flex items-center space-x-3 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700">
+                            <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
+                            <span>Dashboard</span>
+                        </a>
+                        <button id="mobileLogoutButton" class="mobile-logout-link block w-full text-left px-4 py-3 rounded-xl font-medium flex items-center space-x-3 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700" onclick="handleLogout()">
+                            <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+                            <span>Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content relative z-10" id="main-content" role="main">
+        <!-- Scroll Progress Indicator -->
+        <div class="scroll-progress-container fixed top-0 left-0 w-full h-1 z-50">
+            <div class="scroll-progress-bar h-full bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 transition-all duration-300 origin-left scale-x-0"></div>
+        </div>
+        <!-- Home Page -->
+        <section id="home" class="page active min-h-[calc(100vh-300px)]" aria-labelledby="home-heading">
+            <div class="hero-section relative overflow-hidden min-h-screen flex items-center">
+                <div class="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900"></div>
+                <!-- Animated Floating Elements -->
+                <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+                    <div class="absolute top-1/3 right-1/4 w-72 h-72 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-1000"></div>
+                    <div class="absolute bottom-1/4 left-1/3 w-80 h-80 bg-gradient-to-r from-indigo-400 to-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse delay-2000"></div>
+                </div>
+                <div class="relative section-padding w-full">
+                    <div class="container mx-auto">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                            <div class="hero-content space-y-8">
+                                <header class="hero-header space-y-6">
+                                    <div class="premium-badge inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-800 dark:text-green-200 rounded-full text-sm font-medium animate-pulse">
+                                        <span class="material-symbols-outlined" aria-hidden="true">verified</span>
+                                        <span class="ml-2">Trusted by 10,000+ Students</span>
+                                    </div>
+                                    <h1 id="home-heading" class="hero-title display-1 gradient-text text-slate-900 dark:text-white leading-tight">
+                                        Connect.
+                                        <span class="block animate-gradient">
+                                            Collaborate.
+                                        </span>
+                                        Create.
+                                    </h1>
+                                    <p class="hero-description body-lg text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed">
+                                        The premier platform connecting college students for meaningful collaborations and freelance opportunities. 
+                                        Discover talented peers, showcase your skills, and build projects that matter. Join thousands of students 
+                                        already transforming their academic journey through collaboration.
+                                    </p>
+                                    <div class="trust-indicators flex flex-wrap gap-4 mt-4">
+                                        <div class="flex items-center text-sm text-slate-500 dark:text-slate-400">
+                                            <span class="material-symbols-outlined text-green-500 mr-1 text-base">check_circle</span>
+                                            <span>50+ Colleges Connected</span>
+                                        </div>
+                                        <div class="flex items-center text-sm text-slate-500 dark:text-slate-400">
+                                            <span class="material-symbols-outlined text-blue-500 mr-1 text-base">workspace_premium</span>
+                                            <span>Premium Quality Projects</span>
+                                        </div>
+                                        <div class="flex items-center text-sm text-slate-500 dark:text-slate-400">
+                                            <span class="material-symbols-outlined text-purple-500 mr-1 text-base">groups</span>
+                                            <span>Expert Mentor Support</span>
+                                        </div>
+                                    </div>
+                                </header>
+                                
+                                <div class="hero-actions flex flex-col sm:flex-row gap-4">
+                                    <button class="btn btn-primary btn-large group" onclick="showPage('portfolio')" aria-label="Explore student profiles">
+                                        <span>Explore Students</span>
+                                        <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform" aria-hidden="true">arrow_forward</span>
+                                    </button>
+                                    <button class="btn btn-outline btn-large" onclick="showPage('services')" aria-label="Post a collaboration opportunity">
+                                        <span>Post Collaboration</span>
+                                    </button>
+                                </div>
+
+                                <div class="hero-stats flex items-center space-x-8 pt-6">
+                                    <div class="stat-card flex items-center bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                                        <div class="stat-icon w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-3">
+                                            <span class="text-white font-bold text-sm">500+</span>
+                                        </div>
+                                        <div class="stat-info">
+                                            <div class="stat-value font-semibold text-slate-900 dark:text-white">Active Students</div>
+                                            <div class="stat-label text-xs text-slate-500 dark:text-slate-400">College Network</div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card flex items-center bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                                        <div class="stat-icon w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center mr-3">
+                                            <span class="text-white font-bold text-sm">200+</span>
+                                        </div>
+                                        <div class="stat-info">
+                                            <div class="stat-value font-semibold text-slate-900 dark:text-white">Projects Listed</div>
+                                            <div class="stat-label text-xs text-slate-500 dark:text-slate-400">Active Opportunities</div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-card flex items-center bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                                        <div class="stat-icon w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center mr-3">
+                                            <span class="text-white font-bold text-sm">98%</span>
+                                        </div>
+                                        <div class="stat-info">
+                                            <div class="stat-value font-semibold text-slate-900 dark:text-white">Success Rate</div>
+                                            <div class="stat-label text-xs text-slate-500 dark:text-slate-400">Student Satisfaction</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="hero-visual relative">
+                                <div class="relative z-10">
+                                    <div class="card elevated-card p-0 overflow-hidden rounded-3xl shadow-2xl border-0" role="img" aria-label="Premium quality illustration">
+                                        <div class="aspect-square bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 flex items-center justify-center relative overflow-hidden">
+                                            <div class="absolute inset-0 bg-black/10"></div>
+                                            <div class="relative text-center text-white z-10">
+                                                <div class="animate-float">
+                                                    <span class="material-symbols-outlined text-5xl mb-6 block" aria-hidden="true">auto_awesome</span>
+                                                </div>
+                                                <h3 class="text-3xl font-bold mb-3">Premium Quality</h3>
+                                                <p class="text-blue-100 text-lg">Industry-standard excellence</p>
+                                            </div>
+                                            <!-- Floating particles -->
+                                            <div class="absolute inset-0 overflow-hidden">
+                                                <div class="absolute w-2 h-2 bg-white/30 rounded-full animate-particle" style="left: 20%; top: 20%;"></div>
+                                                <div class="absolute w-2 h-2 bg-white/30 rounded-full animate-particle delay-300" style="left: 35%; top: 30%;"></div>
+                                                <div class="absolute w-2 h-2 bg-white/30 rounded-full animate-particle delay-700" style="left: 50%; top: 40%;"></div>
+                                                <div class="absolute w-2 h-2 bg-white/30 rounded-full animate-particle delay-1000" style="left: 65%; top: 30%;"></div>
+                                                <div class="absolute w-2 h-2 bg-white/30 rounded-full animate-particle delay-1500" style="left: 80%; top: 20%;"></div>
+                                                <div class="absolute w-2 h-2 bg-white/30 rounded-full animate-particle delay-2000" style="left: 35%; top: 50%;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="absolute -top-6 -right-6 w-full h-full bg-gradient-to-r from-blue-400 to-purple-400 rounded-3xl -z-10 blur-xl opacity-30"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portfolio/Students Page -->
+        <section id="portfolio" class="page min-h-screen py-12" aria-labelledby="portfolio-heading">
+            <div class="container mx-auto px-4">
+                <header class="portfolio-header text-center mb-12">
+                    <div class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium mb-4">
+                        <span class="material-symbols-outlined mr-2">school</span>
+                        <span>Student Network</span>
+                    </div>
+                    <h2 id="portfolio-heading" class="text-4xl font-bold text-slate-900 dark:text-white mb-4">Discover Top Talent</h2>
+                    <p class="portfolio-description text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
+                        Connect with skilled students across various disciplines. Find the perfect collaborators for your next project or freelance opportunity.
+                    </p>
+                </header>
+                
+                <div class="search-container mb-8">
+                    <div class="relative max-w-2xl mx-auto">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-slate-400" aria-hidden="true">search</span>
+                        </div>
+                        <input type="text" id="studentSearch" placeholder="Search by name, skills, or college..." class="search-input w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent" aria-label="Search students by name, skills, or college">
+                    </div>
+                </div>
+                
+                <div class="filters-container flex justify-center mb-8">
+                    <div class="filters inline-flex space-x-2" role="tablist" aria-label="Student category filters">
+                        <button class="filter-btn active" data-filter="all" role="tab" aria-selected="true" aria-controls="studentsGrid">All Students</button>
+                        <button class="filter-btn" data-filter="frontend" role="tab" aria-selected="false" aria-controls="studentsGrid">Frontend</button>
+                        <button class="filter-btn" data-filter="backend" role="tab" aria-selected="false" aria-controls="studentsGrid">Backend</button>
+                        <button class="filter-btn" data-filter="design" role="tab" aria-selected="false" aria-controls="studentsGrid">Design</button>
+                    </div>
+                </div>
+                
+                <div class="students-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="studentsGrid" role="tabpanel" aria-live="polite">
+                    <!-- Students will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Services/Find Talent Page -->
+        <section id="services" class="page min-h-screen py-12" aria-labelledby="services-heading">
+            <div class="container mx-auto px-4">
+                <header class="services-header text-center mb-12">
+                    <div class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 text-purple-800 dark:text-purple-200 rounded-full text-sm font-medium mb-4">
+                        <span class="material-symbols-outlined mr-2">work</span>
+                        <span>Opportunity Hub</span>
+                    </div>
+                    <h2 id="services-heading" class="text-4xl font-bold text-slate-900 dark:text-white mb-4">Project Marketplace</h2>
+                    <p class="services-description text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
+                        Post your projects and connect with talented students ready to bring your ideas to life. From web development to design, find the perfect team.
+                    </p>
+                </header>
+                
+                <div class="services-layout grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div class="projects-container lg:col-span-8">
+                        <div class="projects-grid grid grid-cols-1 md:grid-cols-2 gap-8" id="projectsGrid">
+                            <!-- Projects will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <aside class="project-form-sidebar lg:col-span-4">
+                        <div class="card project-form-card">
+                            <h3 class="form-title text-xl font-bold mb-4">Post New Project</h3>
+                            <form id="projectForm" class="project-submission-form">
+                                <div class="form-group mb-4">
+                                    <label for="projectTitle" class="block text-sm font-medium mb-2">Project Title</label>
+                                    <input type="text" id="projectTitle" placeholder="Enter project title" class="form-input w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500" required>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label for="projectDescription" class="block text-sm font-medium mb-2">Description</label>
+                                    <textarea id="projectDescription" placeholder="Describe your project requirements" rows="4" class="form-textarea w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500" required></textarea>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label for="requiredSkills" class="block text-sm font-medium mb-2">Required Skills</label>
+                                    <input type="text" id="requiredSkills" placeholder="e.g., React, Node.js, Python" class="form-input w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                                </div>
+                                <div class="form-group mb-6">
+                                    <label for="budgetRange" class="block text-sm font-medium mb-2">Budget Range</label>
+                                    <select id="budgetRange" class="form-select w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                                        <option value="500-1000">$500-$1000</option>
+                                        <option value="1000-3000">$1000-$3000</option>
+                                        <option value="3000-5000">$3000-$5000</option>
+                                        <option value="5000+">$5000+</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-full submit-button">
+                                    <span class="material-symbols-outlined mr-2" aria-hidden="true">send</span>
+                                    Post Project
+                                </button>
+                            </form>
+                        </div>
+                    </aside>
+
+            </div>
+        </section>
+
+        <!-- Login Page -->
+        <section id="login" class="page min-h-screen flex items-center justify-center py-12" aria-labelledby="login-heading">
+            <div class="card p-8 max-w-md w-full mx-4 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+                <h2 id="login-heading" class="text-3xl font-bold text-center mb-6 text-slate-900 dark:text-white">Login to Collabthon</h2>
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="loginUsername" class="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Username</label>
+                        <input type="text" id="loginUsername" name="username" required class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label for="loginPassword" class="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Password</label>
+                        <input type="password" id="loginPassword" name="password" required class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+                    </div>
+                    <button type="submit" class="w-full btn btn-primary py-3 text-lg font-semibold">Login</button>
+                </form>
+                <p class="mt-6 text-center text-slate-600 dark:text-slate-400">
+                    Don't have an account? <a href="#register" class="text-primary hover:underline" onclick="showPage('register')">Sign up</a>
+                </p>
+            </div>
+        </section>
+        
+        <!-- Register Page -->
+        <section id="register" class="page min-h-screen flex items-center justify-center py-12" aria-labelledby="register-heading">
+            <div class="card p-8 max-w-md w-full mx-4 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+                <h2 id="register-heading" class="text-3xl font-bold text-center mb-6 text-slate-900 dark:text-white">Create Account</h2>
+                <form id="registerForm" class="space-y-6">
+                    <div>
+                        <label for="regUsername" class="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Username</label>
+                        <input type="text" id="regUsername" name="username" required class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label for="regEmail" class="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Email</label>
+                        <input type="email" id="regEmail" name="email" required class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label for="regPassword" class="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Password</label>
+                        <input type="password" id="regPassword" name="password" required class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-slate-700 text-slate-900 dark:text-white">
+                    </div>
+                    <button type="submit" class="w-full btn btn-primary py-3 text-lg font-semibold">Create Account</button>
+                </form>
+                <p class="mt-6 text-center text-slate-600 dark:text-slate-400">
+                    Already have an account? <a href="#login" class="text-primary hover:underline" onclick="showPage('login')">Login</a>
+                </p>
+            </div>
+        </section>
+        
+        <!-- Dashboard Page -->
+        <section id="dashboard" class="page min-h-screen py-12" aria-labelledby="dashboard-heading">
+            <div class="container mx-auto px-4">
+                <header class="dashboard-header text-center mb-12">
+                    <h2 id="dashboard-heading" class="text-4xl font-bold text-slate-900 dark:text-white mb-4">Dashboard</h2>
+                    <p class="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
+                        Welcome back, <span class="user-info font-semibold text-primary" id="currentUser"></span>!
+                    </p>
+                </header>
+                
+                <div class="dashboard-stats grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+                    <div class="stat-card text-center p-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+                        <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1" data-stat="total">0</div>
+                        <div class="text-sm text-slate-600 dark:text-slate-400">Total Projects</div>
+                    </div>
+                    <div class="stat-card text-center p-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+                        <div class="text-3xl font-bold text-green-600 dark:text-green-400 mb-1" data-stat="open">0</div>
+                        <div class="text-sm text-slate-600 dark:text-slate-400">Open Projects</div>
+                    </div>
+                    <div class="stat-card text-center p-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+                        <div class="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1" data-stat="collaborations">0</div>
+                        <div class="text-sm text-slate-600 dark:text-slate-400">Collaborations</div>
+                    </div>
+                    <div class="stat-card text-center p-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
+                        <div class="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mb-1" data-stat="connections">0</div>
+                        <div class="text-sm text-slate-600 dark:text-slate-400">Connections</div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-content grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="my-projects">
+                        <h3 class="text-2xl font-bold mb-4 text-slate-900 dark:text-white">My Projects</h3>
+                        <div id="myProjectsGrid" class="projects-grid grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+                    </div>
+                    <div class="my-connections">
+                        <h3 class="text-2xl font-bold mb-4 text-slate-900 dark:text-white">My Connections</h3>
+                        <div id="myConnectionsGrid" class="students-grid grid grid-cols-1 gap-6"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- About Page -->
+        <section id="about" class="page min-h-screen py-12" aria-labelledby="about-heading">
+            <div class="container mx-auto px-4">
+                <header class="about-header text-center mb-16">
+                    <h2 id="about-heading" class="text-4xl font-bold text-slate-900 dark:text-white mb-6">About Collabthon</h2>
+                    <p class="about-description text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
+                        Empowering college students to connect, collaborate, and create amazing projects together. Our platform bridges the gap between talented individuals and meaningful opportunities.
+                    </p>
+                </header>
+                
+                <div class="about-features grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                    <div class="feature-card text-center p-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50 hover:transform hover:-translate-y-2 transition-all duration-300">
+                        <div class="feature-icon w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="material-symbols-outlined text-white text-2xl" aria-hidden="true">auto_awesome</span>
+                        </div>
+                        <h3 class="feature-title text-xl font-bold mb-2 text-slate-900 dark:text-white">Exceptional UI/UX</h3>
+                        <p class="feature-description text-slate-600 dark:text-slate-400">
+                            Industry-leading design principles with pixel-perfect implementation crafted specifically for student collaboration
+                        </p>
+                    </div>
+                    
+                    <div class="feature-card text-center p-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50 hover:transform hover:-translate-y-2 transition-all duration-300">
+                        <div class="feature-icon w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="material-symbols-outlined text-white text-2xl" aria-hidden="true">bolt</span>
+                        </div>
+                        <h3 class="feature-title text-xl font-bold mb-2 text-slate-900 dark:text-white">Lightning Fast</h3>
+                        <p class="feature-description text-slate-600 dark:text-slate-400">
+                            Optimized performance with cutting-edge techniques ensures seamless collaboration experience
+                        </p>
+                    </div>
+                    
+                    <div class="feature-card text-center p-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-200/50 dark:border-slate-700/50 hover:transform hover:-translate-y-2 transition-all duration-300">
+                        <div class="feature-icon w-16 h-16 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="material-symbols-outlined text-white text-2xl" aria-hidden="true">shield</span>
+                        </div>
+                        <h3 class="feature-title text-xl font-bold mb-2 text-slate-900 dark:text-white">Reliable & Scalable</h3>
+                        <p class="feature-description text-slate-600 dark:text-slate-400">
+                            Robust architecture designed to scale with your growing network and project needs
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="about-content bg-white/30 dark:bg-slate-800/30 backdrop-blur-sm rounded-3xl p-8 border border-slate-200/50 dark:border-slate-700/50">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">Our Mission</h3>
+                            <p class="text-slate-600 dark:text-slate-300 mb-6">
+                                We believe that the best innovations happen when talented minds collaborate. Collabthon connects college students with complementary skills to work together on projects that matter.
+                            </p>
+                            <p class="text-slate-600 dark:text-slate-300">
+                                Whether you're looking for a frontend developer, designer, or data scientist, our platform makes it easy to find the right collaborators for your academic and freelance projects.
+                            </p>
+                        </div>
+                        <div class="stats-container">
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="stat-item text-center p-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl">
+                                    <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">10,000+</div>
+                                    <div class="text-sm text-slate-600 dark:text-slate-400">Active Students</div>
+                                </div>
+                                <div class="stat-item text-center p-4 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl">
+                                    <div class="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">2,500+</div>
+                                    <div class="text-sm text-slate-600 dark:text-slate-400">Projects Completed</div>
+                                </div>
+                                <div class="stat-item text-center p-4 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl">
+                                    <div class="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-1">95%</div>
+                                    <div class="text-sm text-slate-600 dark:text-slate-400">Success Rate</div>
+                                </div>
+                                <div class="stat-item text-center p-4 bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 rounded-xl">
+                                    <div class="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">50+</div>
+                                    <div class="text-sm text-slate-600 dark:text-slate-400">Colleges Connected</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact/Collaborate Page -->
+        <section id="contact" class="page min-h-screen py-12" aria-labelledby="contact-heading">
+            <div class="container mx-auto px-4">
+                <header class="contact-header text-center mb-12">
+                    <div class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-100 to-teal-100 dark:from-green-900/30 dark:to-teal-900/30 text-green-800 dark:text-green-200 rounded-full text-sm font-medium mb-4">
+                        <span class="material-symbols-outlined mr-2">handshake</span>
+                        <span>Team Building</span>
+                    </div>
+                    <h2 id="contact-heading" class="text-4xl font-bold text-slate-900 dark:text-white mb-4">Build Your Dream Team</h2>
+                    <p class="contact-description text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
+                        Describe your project vision and let us match you with the perfect student collaborators. Our team will help you find skilled individuals who align with your goals.
+                    </p>
+                </header>
+                
+                <div class="contact-form-container max-w-2xl mx-auto">
+                    <div class="card contact-card p-8">
+                        <form id="contactForm" class="collaboration-request-form">
+                            <div class="form-group mb-6">
+                                <label for="contactProjectTitle" class="block text-lg font-semibold mb-3">Project Title</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="material-symbols-outlined text-slate-400" aria-hidden="true">work</span>
+                                    </div>
+                                    <input type="text" id="contactProjectTitle" placeholder="e.g., Mobile App Development, Web Design Project" class="form-input w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group mb-6">
+                                <label for="contactProjectDescription" class="block text-lg font-semibold mb-3">Project Description</label>
+                                <div class="relative">
+                                    <div class="absolute top-3 left-3 flex items-center pointer-events-none">
+                                        <span class="material-symbols-outlined text-slate-400" aria-hidden="true">chat</span>
+                                    </div>
+                                    <textarea id="contactProjectDescription" rows="6" placeholder="Describe your project requirements, timeline, budget range, and what skills you're looking for..." class="form-textarea w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 resize-none" required></textarea>
+                                </div>
+                                <p class="mt-2 text-sm text-slate-500 flex items-center">
+                                    <span class="material-symbols-outlined text-sm mr-1" aria-hidden="true">info</span>
+                                    Be specific about requirements, timeline, and compensation
+                                </p>
+                            </div>
+                            
+                            <div class="form-group mb-6">
+                                <div class="security-label flex items-center space-x-2 text-sm text-slate-600 mb-2">
+                                    <span class="material-symbols-outlined text-green-500" aria-hidden="true">security</span>
+                                    <span>Security Verification</span>
+                                </div>
+                                <div class="security-verification mt-2 flex items-center justify-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border-2 border-green-200 dark:border-green-700/50 cursor-pointer hover:from-green-100 hover:to-emerald-100 dark:hover:from-green-900/30 dark:hover:to-emerald-900/30 transition-all duration-300" tabindex="0" role="button" aria-label="Verify human security">
+                                    <div class="flex items-center">
+                                        <div class="verification-icon w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                                            <span class="material-symbols-outlined text-white text-sm" aria-hidden="true">check</span>
+                                        </div>
+                                        <div class="verification-text">
+                                            <div class="font-medium text-green-800 dark:text-green-300">Verified Human</div>
+                                            <div class="text-xs text-green-600 dark:text-green-400">Click to confirm security</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-full py-3 text-lg font-semibold submit-button">
+                                <span class="material-symbols-outlined mr-2" aria-hidden="true">rocket_launch</span>
+                                Find Collaborators
+                                <span class="material-symbols-outlined ml-2" aria-hidden="true">arrow_forward</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">
+        <span class="material-symbols-outlined">arrow_upward</span>
+    </button>
+    
+    <!-- Comprehensive Footer -->
+    <footer class="site-footer bg-slate-900 text-slate-300 py-16" role="contentinfo">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <!-- Company Info -->
+                <div class="footer-column">
+                    <div class="footer-brand mb-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mr-3">
+                                <span class="text-white font-bold text-lg">🤝</span>
+                            </div>
+                            <span class="text-2xl font-bold text-white">Collabthon</span>
+                        </div>
+                        <p class="text-slate-400 mb-4">
+                            Connecting college students for meaningful collaborations and freelance opportunities. Build your network, showcase your skills, and create amazing projects together.
+                        </p>
+                        <div class="social-links flex space-x-4">
+                            <a href="#" class="social-link w-10 h-10 rounded-full bg-slate-800 hover:bg-blue-600 flex items-center justify-center transition-colors" aria-label="Follow us on Twitter">
+                                <span class="material-symbols-outlined text-slate-300 hover:text-white">link</span>
+                            </a>
+                            <a href="#" class="social-link w-10 h-10 rounded-full bg-slate-800 hover:bg-blue-600 flex items-center justify-center transition-colors" aria-label="Connect on LinkedIn">
+                                <span class="material-symbols-outlined text-slate-300 hover:text-white">group</span>
+                            </a>
+                            <a href="#" class="social-link w-10 h-10 rounded-full bg-slate-800 hover:bg-blue-600 flex items-center justify-center transition-colors" aria-label="Follow on Instagram">
+                                <span class="material-symbols-outlined text-slate-300 hover:text-white">photo_camera</span>
+                            </a>
+                            <a href="#" class="social-link w-10 h-10 rounded-full bg-slate-800 hover:bg-blue-600 flex items-center justify-center transition-colors" aria-label="Join our Discord">
+                                <span class="material-symbols-outlined text-slate-300 hover:text-white">forum</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Links -->
+                <div class="footer-column">
+                    <h3 class="footer-heading text-white text-lg font-semibold mb-6">Quick Links</h3>
+                    <ul class="footer-links space-y-3">
+                        <li><a href="#home" class="footer-link text-slate-400 hover:text-white transition-colors flex items-center">
+                            <span class="material-symbols-outlined text-sm mr-2">home</span>
+                            Home
+                        </a></li>
+                        <li><a href="#portfolio" class="footer-link text-slate-400 hover:text-white transition-colors flex items-center">
+                            <span class="material-symbols-outlined text-sm mr-2">groups</span>
+                            Student Directory
+                        </a></li>
+                        <li><a href="#services" class="footer-link text-slate-400 hover:text-white transition-colors flex items-center">
+                            <span class="material-symbols-outlined text-sm mr-2">work</span>
+                            Find Talent
+                        </a></li>
+                        <li><a href="#about" class="footer-link text-slate-400 hover:text-white transition-colors flex items-center">
+                            <span class="material-symbols-outlined text-sm mr-2">info</span>
+                            About Us
+                        </a></li>
+                        <li><a href="#contact" class="footer-link text-slate-400 hover:text-white transition-colors flex items-center">
+                            <span class="material-symbols-outlined text-sm mr-2">chat</span>
+                            Contact
+                        </a></li>
+                    </ul>
+                </div>
+                
+                <!-- Resources -->
+                <div class="footer-column">
+                    <h3 class="footer-heading text-white text-lg font-semibold mb-6">Resources</h3>
+                    <ul class="footer-links space-y-3">
+                        <li><a href="#" class="footer-link text-slate-400 hover:text-white transition-colors">Blog & Articles</a></li>
+                        <li><a href="#" class="footer-link text-slate-400 hover:text-white transition-colors">Success Stories</a></li>
+                        <li><a href="#" class="footer-link text-slate-400 hover:text-white transition-colors">Learning Resources</a></li>
+                        <li><a href="#" class="footer-link text-slate-400 hover:text-white transition-colors">Community Guidelines</a></li>
+                        <li><a href="#" class="footer-link text-slate-400 hover:text-white transition-colors">Help Center</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact Info -->
+                <div class="footer-column">
+                    <h3 class="footer-heading text-white text-lg font-semibold mb-6">Contact Us</h3>
+                    <div class="contact-info space-y-4">
+                        <div class="contact-item flex items-start">
+                            <span class="material-symbols-outlined text-blue-400 mr-3 mt-1">mail</span>
+                            <div>
+                                <h4 class="text-slate-300 font-medium mb-1">Email</h4>
+                                <a href="mailto:support@collabthon.com" class="text-slate-400 hover:text-white transition-colors">support@collabthon.com</a>
+                            </div>
+                        </div>
+                        <div class="contact-item flex items-start">
+                            <span class="material-symbols-outlined text-blue-400 mr-3 mt-1">location_on</span>
+                            <div>
+                                <h4 class="text-slate-300 font-medium mb-1">Location</h4>
+                                <p class="text-slate-400">San Francisco, CA<br>United States</p>
+                            </div>
+                        </div>
+                        <div class="contact-item flex items-start">
+                            <span class="material-symbols-outlined text-blue-400 mr-3 mt-1">schedule</span>
+                            <div>
+                                <h4 class="text-slate-300 font-medium mb-1">Support Hours</h4>
+                                <p class="text-slate-400">Monday-Friday<br>9:00 AM - 6:00 PM PST</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Newsletter Signup -->
+            <div class="newsletter-section bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 mb-12 border border-slate-700/50">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-white mb-2">Stay Updated</h3>
+                    <p class="text-slate-400 mb-6">Get the latest updates on new features, success stories, and collaboration opportunities.</p>
+                    <div class="max-w-md mx-auto flex">
+                        <input type="email" placeholder="Enter your email" class="flex-1 px-4 py-3 rounded-l-xl border border-slate-600 bg-slate-700/50 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button class="btn btn-primary rounded-l-none px-6">
+                            Subscribe
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Bar -->
+            <div class="footer-bottom border-t border-slate-800 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="copyright text-slate-500 text-sm mb-4 md:mb-0">
+                        © 2026 Collabthon. All rights reserved.
+                    </div>
+                    <div class="legal-links flex space-x-6">
+                        <a href="#" class="text-slate-500 hover:text-slate-300 text-sm transition-colors">Privacy Policy</a>
+                        <a href="#" class="text-slate-500 hover:text-slate-300 text-sm transition-colors">Terms of Service</a>
+                        <a href="#" class="text-slate-500 hover:text-slate-300 text-sm transition-colors">Cookie Policy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+    
+    <script src="api.js"></script>
+    <script src="integrated.js"></script>
+</body>
+</html>
