@@ -58,7 +58,7 @@ async def track_user_activity(
             user_agent=user_agent,
             ip_address=ip_address,
             session_id=session_id,
-            metadata=activity_data.metadata
+            activity_metadata=activity_data.metadata
         )
         
         db.add(activity)

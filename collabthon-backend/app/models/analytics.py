@@ -29,7 +29,7 @@ class UserActivity(Base):
     user_agent = Column(Text)  # Browser information
     ip_address = Column(String(45))  # IP address
     session_id = Column(String(100))  # Session identifier
-    metadata = Column(JSON)  # Additional metadata as JSON
+    activity_metadata = Column('activity_meta', JSON)  # Additional metadata as JSON (using different internal name to avoid conflict)
     timestamp = Column(DateTime, default=datetime.utcnow)
     
     # Relationships

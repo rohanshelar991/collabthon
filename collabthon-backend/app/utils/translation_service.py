@@ -1,6 +1,9 @@
 """Google Translation Service for Collabthon Platform"""
 
-from google.cloud import translate_v2 as translate
+try:
+    from google.cloud import translate_v2 as translate
+except ImportError:
+    translate = None  # Fallback if library not available
 from typing import Dict, List, Optional
 from app.core.config import settings
 import os

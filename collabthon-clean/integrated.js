@@ -121,6 +121,16 @@ function showPage(pageName) {
         // Special handling for services page to render talent cards
         if (pageName === 'services') {
             renderTalentCards();
+            
+            // Reset filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => 
+                btn.classList.remove('active')
+            );
+            // Set 'All Talents' as active
+            const allTalentsBtn = document.querySelector('[data-filter="all"]');
+            if (allTalentsBtn) {
+                allTalentsBtn.classList.add('active');
+            }
         }
         
         // Scroll to top
@@ -398,14 +408,23 @@ function showProjectDetails(title) {
 }
 
 // Utility function to connect with student
-function connectWithStudent(userId) {
+function connectWithStudent(name, userId = null) {
     if (!currentState.isAuthenticated) {
         showNotification('Please login to connect with students', 'warning');
         showPage('login');
         return;
     }
     
-    alert(`Connecting with student (ID: ${userId})\n\nIn a real application, this would initiate a connection request.`);
+    // If userId is provided as the first argument (backward compatibility)
+    if (typeof name === 'number' || typeof name === 'string' && !isNaN(name)) {
+        alert(`Connecting with student (ID: ${name})\n\nIn a real application, this would initiate a connection request.`);
+        return;
+    }
+    
+    alert(`Connecting with ${name}\n\nIn a real application, this would send a collaboration request.`);
+    
+    // Log the connection attempt for analytics
+    trackActivity('connect_with_student', { student_name: name });
 }
 
 // Utility function to apply to project
@@ -435,6 +454,11 @@ async function initializeIntegratedApp() {
         
         // Load initial data
         await loadInitialData();
+        
+        // Initialize talent cards on services page if currently visible
+        if (window.location.hash === '#services' || document.getElementById('services')?.classList.contains('active')) {
+            renderTalentCards();
+        }
         
         console.log('Integrated application initialized successfully!');
     } catch (error) {
@@ -651,26 +675,30 @@ function createTalentCard(profile) {
     const card = document.createElement('div');
     card.className = 'talent-card card';
     card.innerHTML = `
-        <div class="flex flex-col items-center text-center p-4">
-            <div class="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg mb-3">
-                ${getInitials(profile.first_name, profile.last_name)}
+        <div class="talent-content-wrapper">
+            <div class="talent-header">
+                <div class="talent-avatar">
+                    ${getInitials(profile.first_name, profile.last_name)}
+                </div>
+                <h3 class="talent-name text-slate-900 dark:text-white">${profile.first_name} ${profile.last_name}</h3>
+                <p class="talent-role text-slate-600 dark:text-slate-400 font-medium">${profile.role || 'Developer'}</p>
             </div>
-            <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-1">${profile.first_name} ${profile.last_name}</h3>
-            <p class="text-slate-600 dark:text-slate-400 font-medium mb-2">${profile.role || 'Developer'}</p>
-            <div class="mb-3">
-                <div class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Skills</div>
-                <div class="flex flex-wrap gap-1 justify-center">
-                    ${(JSON.parse(profile.skills || '[]') || []).slice(0, 3).map(skill => 
-                        '<span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs rounded-full">' + skill + '</span>'
-                    ).join('')}
+            <div class="talent-details">
+                <div class="talent-section">
+                    <div class="talent-label text-slate-700 dark:text-slate-300">Skills</div>
+                    <div class="talent-skills">
+                        ${(JSON.parse(profile.skills || '[]') || []).slice(0, 3).map(skill => 
+                            '<span class="talent-skill-tag bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">' + skill + '</span>'
+                        ).join('')}
+                    </div>
+                </div>
+                <div class="talent-section">
+                    <div class="talent-label text-slate-700 dark:text-slate-300">College</div>
+                    <div class="talent-college text-slate-600 dark:text-slate-400 font-medium">${profile.college}</div>
                 </div>
             </div>
-            <div class="mb-3">
-                <div class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">College</div>
-                <div class="text-sm text-slate-600 dark:text-slate-400 font-medium">${profile.college}</div>
-            </div>
-            <p class="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">${profile.bio || 'Passionate about technology and innovation.'}</p>
-            <button class="btn btn-primary btn-small w-full" onclick="connectWithStudent(${profile.user_id})">
+            <p class="talent-bio text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">${profile.bio || 'Passionate about technology and innovation.'}</p>
+            <button class="talent-button" onclick="connectWithStudent('${profile.first_name} ${profile.last_name}', ${profile.user_id})">
                 Connect
             </button>
         </div>
@@ -678,7 +706,7 @@ function createTalentCard(profile) {
     return card;
 }
 
-function renderTalentCards() {
+function renderTalentCards(talentList = null) {
     const grid = document.getElementById('talentGrid');
     if (!grid) return;
     
@@ -686,7 +714,7 @@ function renderTalentCards() {
     grid.innerHTML = '';
     
     // Get talent profiles (first 15 from the Indian student profiles)
-    const talentProfiles = getTalentProfiles();
+    const talentProfiles = talentList || getTalentProfiles();
     
     talentProfiles.forEach(profile => {
         const card = createTalentCard(profile);
@@ -1135,9 +1163,16 @@ function setupEventListeners() {
         searchInput.addEventListener('input', debounce(handleSearch, 300));
     }
     
-    // Filter buttons
+    // Talent search functionality
+    const talentSearchInput = document.getElementById('talentSearch');
+    if (talentSearchInput) {
+        talentSearchInput.addEventListener('input', debounce(handleTalentSearch, 300));
+    }
+    
+    // Filter buttons - update the existing ones
     const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(button => {
+        button.removeEventListener('click', handleFilterClick); // Remove old listeners if any
         button.addEventListener('click', handleFilterClick);
     });
 }
@@ -1187,6 +1222,33 @@ async function handleSearch(event) {
     }
 }
 
+async function handleTalentSearch(event) {
+    const query = event.target.value.trim();
+    
+    // If no query, show all talent
+    if (query.length < 2) {
+        renderTalentCards();
+        return;
+    }
+    
+    try {
+        // Filter talent based on search query
+        const allTalent = getTalentProfiles();
+        const filteredTalent = allTalent.filter(talent => 
+            talent.first_name.toLowerCase().includes(query.toLowerCase()) ||
+            talent.last_name.toLowerCase().includes(query.toLowerCase()) ||
+            talent.college.toLowerCase().includes(query.toLowerCase()) ||
+            talent.role.toLowerCase().includes(query.toLowerCase()) ||
+            JSON.parse(talent.skills).some(skill => skill.toLowerCase().includes(query.toLowerCase()))
+        );
+        
+        // Render filtered talent
+        renderTalentCards(filteredTalent);
+    } catch (error) {
+        console.error('Talent search failed:', error);
+    }
+}
+
 function handleFilterClick(event) {
     const filterType = event.target.dataset.filter;
     
@@ -1196,18 +1258,95 @@ function handleFilterClick(event) {
     );
     event.target.classList.add('active');
     
-    // Apply filter (simplified for demo)
-    if (filterType === 'all') {
-        loadInitialData();
+    // Check if this is a talent filter (on services page)
+    const isTalentPage = window.location.hash === '#services' || document.getElementById('services')?.classList.contains('active');
+    
+    if (isTalentPage) {
+        // Apply talent filter
+        if (filterType === 'all') {
+            renderTalentCards();
+        } else {
+            // Filter talent by role or skills
+            const allTalent = getTalentProfiles();
+            let filteredTalent = [];
+            
+            switch(filterType) {
+                case 'frontend':
+                    filteredTalent = allTalent.filter(talent => 
+                        talent.role.toLowerCase().includes('frontend') ||
+                        talent.role.toLowerCase().includes('ui') ||
+                        talent.role.toLowerCase().includes('ux') ||
+                        JSON.parse(talent.skills).some(skill => 
+                            skill.toLowerCase().includes('react') ||
+                            skill.toLowerCase().includes('vue') ||
+                            skill.toLowerCase().includes('angular') ||
+                            skill.toLowerCase().includes('html') ||
+                            skill.toLowerCase().includes('css')
+                        )
+                    );
+                    break;
+                case 'backend':
+                    filteredTalent = allTalent.filter(talent => 
+                        talent.role.toLowerCase().includes('backend') ||
+                        talent.role.toLowerCase().includes('api') ||
+                        JSON.parse(talent.skills).some(skill => 
+                            skill.toLowerCase().includes('node') ||
+                            skill.toLowerCase().includes('python') ||
+                            skill.toLowerCase().includes('java') ||
+                            skill.toLowerCase().includes('go') ||
+                            skill.toLowerCase().includes('django') ||
+                            skill.toLowerCase().includes('express')
+                        )
+                    );
+                    break;
+                case 'design':
+                    filteredTalent = allTalent.filter(talent => 
+                        talent.role.toLowerCase().includes('design') ||
+                        talent.role.toLowerCase().includes('ui') ||
+                        talent.role.toLowerCase().includes('ux') ||
+                        JSON.parse(talent.skills).some(skill => 
+                            skill.toLowerCase().includes('figma') ||
+                            skill.toLowerCase().includes('xd') ||
+                            skill.toLowerCase().includes('photoshop') ||
+                            skill.toLowerCase().includes('illustrator')
+                        )
+                    );
+                    break;
+                case 'data':
+                    filteredTalent = allTalent.filter(talent => 
+                        talent.role.toLowerCase().includes('data') ||
+                        talent.role.toLowerCase().includes('science') ||
+                        talent.role.toLowerCase().includes('analyst') ||
+                        JSON.parse(talent.skills).some(skill => 
+                            skill.toLowerCase().includes('python') ||
+                            skill.toLowerCase().includes('r') ||
+                            skill.toLowerCase().includes('sql') ||
+                            skill.toLowerCase().includes('tableau') ||
+                            skill.toLowerCase().includes('tensorflow') ||
+                            skill.toLowerCase().includes('pytorch')
+                        )
+                    );
+                    break;
+                default:
+                    filteredTalent = allTalent;
+            }
+            
+            renderTalentCards(filteredTalent);
+        }
     } else {
-        // Filter by skill
-        const filtered = currentState.projects.filter(project =>
-            project.required_skills?.some(skill => 
-                skill.toLowerCase().includes(filterType.toLowerCase())
-            )
-        );
-        currentState.projects = filtered;
-        renderProjects();
+        // Apply project filter (existing functionality)
+        if (filterType === 'all') {
+            loadInitialData();
+        } else {
+            // Filter by skill
+            const filtered = currentState.projects.filter(project =>
+                project.required_skills?.some(skill => 
+                    skill.toLowerCase().includes(filterType.toLowerCase())
+                )
+            );
+            currentState.projects = filtered;
+            renderProjects();
+        }
     }
 }
 
@@ -1413,6 +1552,126 @@ function setupEnhancedEventListeners() {
             window.debouncedSearchTracker(target.value);
         }
     });
+}
+
+// Global flag to track reCAPTCHA verification status
+let isRecaptchaVerified = false;
+
+// Function to handle the security verification
+function verifyHuman() {
+    return new Promise((resolve, reject) => {
+        // Check if grecaptcha is loaded
+        if (typeof grecaptcha === 'undefined') {
+            console.error('reCAPTCHA script not loaded');
+            reject(new Error('reCAPTCHA script not loaded'));
+            return;
+        }
+        
+        // Execute reCAPTCHA with your site key
+        // Using test key for development - replace with your actual site key in production
+        grecaptcha.execute('6LeIxAcTAAAAAGTVH7yLmQLNFq_D6LiRYb3sPAz3', {action: 'homepage'})
+        .then(function(token) {
+            // Send token to backend for verification
+            fetch(`${api.baseURL}/auth/google/verify-recaptcha`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({token: token})
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.detail || 'Verification failed');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('reCAPTCHA verification successful');
+                isRecaptchaVerified = true;
+                
+                // Update UI to show verified status
+                const verificationElement = document.querySelector('.security-verification');
+                if (verificationElement) {
+                    verificationElement.classList.remove('border-green-200', 'dark:border-green-700/50');
+                    verificationElement.classList.add('border-blue-500', 'dark:border-blue-500');
+                    
+                    const verificationText = verificationElement.querySelector('.verification-text');
+                    if (verificationText) {
+                        const statusDiv = verificationText.querySelector('.font-medium');
+                        const descDiv = verificationText.querySelector('.text-xs');
+                        
+                        if (statusDiv) statusDiv.textContent = 'Verified Human';
+                        if (descDiv) descDiv.textContent = 'Security confirmed ✓';
+                        
+                        statusDiv.classList.remove('text-green-800', 'dark:text-green-300');
+                        statusDiv.classList.add('text-blue-600', 'dark:text-blue-300');
+                        
+                        descDiv.classList.remove('text-green-600', 'dark:text-green-400');
+                        descDiv.classList.add('text-blue-500', 'dark:text-blue-400');
+                    }
+                    
+                    // Change icon to blue checkmark
+                    const iconElement = verificationElement.querySelector('.verification-icon');
+                    if (iconElement) {
+                        iconElement.classList.remove('bg-green-500');
+                        iconElement.classList.add('bg-blue-500');
+                    }
+                }
+                
+                resolve(true);
+            })
+            .catch(error => {
+                console.error('reCAPTCHA verification error:', error);
+                reject(error);
+            });
+        })
+        .catch(error => {
+            console.error('reCAPTCHA execution error:', error);
+            reject(error);
+        });
+    });
+}
+
+// Add event listener for security verification
+function setupSecurityVerification() {
+    const securityVerificationElement = document.querySelector('.security-verification');
+    if (securityVerificationElement) {
+        securityVerificationElement.addEventListener('click', function(e) {
+            e.preventDefault();
+            showLoadingIndicator();
+            
+            verifyHuman()
+            .then(success => {
+                if (success) {
+                    showNotification('Security verification successful!', 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Security verification failed:', error);
+                showNotification(`Security verification failed: ${error.message}`, 'error');
+            })
+            .finally(() => {
+                hideLoadingIndicator();
+            });
+        });
+        
+        // Also handle keyboard events for accessibility
+        securityVerificationElement.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                securityVerificationElement.click();
+            }
+        });
+    }
+}
+
+// Initialize security verification when the page loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupSecurityVerification);
+} else {
+    setupSecurityVerification();
 }
 
 // Initialize enhanced event tracking
