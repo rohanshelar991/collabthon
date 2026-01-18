@@ -3,6 +3,8 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
 from app.database import Base
+from .notification import Notification, NotificationType
+from .analytics import UserActivity, LocationTracking, EmailCampaign, EmailRecipient, Report, FileUpload
 
 class UserRole(str, enum.Enum):
     STUDENT = "student"

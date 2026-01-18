@@ -179,6 +179,118 @@ class AdminStats(BaseModel):
 class ProjectStatusUpdate(BaseModel):
     status: str
 
+# Notification schemas
+class NotificationBase(BaseModel):
+    type: str
+    title: str
+    message: str
+    data: Optional[str] = None
+
+class NotificationCreate(NotificationBase):
+    recipient_id: int
+
+class NotificationUpdate(BaseModel):
+    is_read: Optional[bool] = None
+
+class NotificationResponse(NotificationBase):
+    id: int
+    recipient_id: int
+    is_read: bool
+    is_active: bool
+    created_at: datetime
+    read_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+# Analytics schemas
+class ActivityTrackingRequest(BaseModel):
+    activity_type: str
+    page_url: str
+    element_id: Optional[str] = None
+    element_class: Optional[str] = None
+    referrer: Optional[str] = None
+    metadata: Optional[dict] = None
+
+
+class UserActivityResponse(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    activity_type: str
+    page_url: Optional[str] = None
+    element_id: Optional[str] = None
+    element_class: Optional[str] = None
+    referrer: Optional[str] = None
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None
+    session_id: Optional[str] = None
+    metadata: Optional[dict] = None
+    timestamp: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class LocationTrackingRequest(BaseModel):
+    latitude: float
+    longitude: float
+    country: Optional[str] = None
+    city: Optional[str] = None
+    region: Optional[str] = None
+    postal_code: Optional[str] = None
+    timezone: Optional[str] = None
+    accuracy: Optional[float] = None
+
+
+class EmailCampaignCreate(BaseModel):
+    name: str
+    subject: str
+    content: str
+    scheduled_at: Optional[datetime] = None
+
+
+class EmailCampaignResponse(BaseModel):
+    id: int
+    name: str
+    subject: str
+    content: str
+    recipients_count: int
+    sent_count: int
+    opened_count: int
+    clicked_count: int
+    created_by: Optional[int] = None
+    scheduled_at: Optional[datetime]
+    sent_at: Optional[datetime]
+    status: str
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class ReportGenerateRequest(BaseModel):
+    report_type: str
+    title: str
+    description: Optional[str] = None
+    filters: Optional[dict] = None
+
+
+class ReportResponse(BaseModel):
+    id: int
+    report_type: str
+    title: str
+    description: Optional[str] = None
+    data: dict
+    generated_by: Optional[int] = None
+    generated_at: datetime
+    expires_at: Optional[datetime]
+    is_cached: bool
+    
+    class Config:
+        from_attributes = True
+
+
 # Response wrappers
 class PaginatedResponse(BaseModel):
     items: List

@@ -1,5 +1,12 @@
-// Collabthon Integrated Frontend - API Connection Layer
+// Collabthon Integrated Frontend - Complete UI and API Solution
 console.log('🚀 Initializing Collabthon Integrated Frontend...');
+
+// Initialize all functionality on DOM load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
+}
 
 // State Management
 let currentState = {
@@ -11,34 +18,449 @@ let currentState = {
     profiles: []
 };
 
+// Initialize the complete application
+async function initializeApp() {
+    console.log('Initializing complete application...');
+    
+    try {
+        // Initialize UI functionality first
+        initializeNavigation();
+        initializeThemeToggle();
+        initializeMobileMenu();
+        initializePages();
+        initializeSearch();
+        initializeFilters();
+        initializeScrollEffects();
+        setupFormHandlers();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        // Update UI based on auth state
+        updateAuthUI();
+        
+        // Then handle API functionality
+        await checkAuthStatus();
+        await loadInitialData();
+        
+        console.log('Complete application initialized successfully!');
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        showNotification('Application initialization failed, loading with limited functionality', 'warning');
+        // Still show the UI with mock data
+        populateMockData();
+    } finally {
+        // Always hide the loading indicator
+        setTimeout(hideLoadingIndicator, 1000);
+    }
+}
+
+// Navigation System
+function initializeNavigation() {
+    const navItems = document.querySelectorAll('.nav-item[data-page]');
+    const mobileNavItems = document.querySelectorAll('#mobileMenu a[data-page]');
+    
+    // Desktop navigation
+    navItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = this.getAttribute('data-page');
+            showPage(page);
+            
+            // Update active states
+            navItems.forEach(nav => nav.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    // Mobile navigation
+    mobileNavItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = this.getAttribute('data-page');
+            showPage(page);
+            closeMobileMenu();
+            
+            // Update active states
+            mobileNavItems.forEach(nav => nav.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+}
+
+// Page Management
+function initializePages() {
+    const pages = document.querySelectorAll('.page');
+    const hash = window.location.hash.substring(1) || 'home';
+    
+    // Show initial page
+    showPage(hash);
+    
+    // Handle browser back/forward
+    window.addEventListener('hashchange', function() {
+        const newHash = window.location.hash.substring(1) || 'home';
+        showPage(newHash);
+    });
+}
+
+function showPage(pageName) {
+    // Hide all pages
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+    
+    // Show requested page
+    const targetPage = document.getElementById(pageName);
+    if (targetPage) {
+        targetPage.classList.add('active');
+        window.location.hash = pageName;
+        
+        // Update navigation active states
+        updateNavigationStates(pageName);
+        
+        // Special handling for services page to render talent cards
+        if (pageName === 'services') {
+            renderTalentCards();
+        }
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        console.log(`Showing page: ${pageName}`);
+    }
+}
+
+function updateNavigationStates(activePage) {
+    // Update desktop navigation
+    document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+        if (item.getAttribute('data-page') === activePage) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+    
+    // Update mobile navigation
+    document.querySelectorAll('#mobileMenu a[data-page]').forEach(item => {
+        if (item.getAttribute('data-page') === activePage) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+}
+
+// Mobile Menu
+function initializeMobileMenu() {
+    const menuToggle = document.getElementById('navToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+    
+    if (menuToggle && mobileMenu) {
+        menuToggle.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+            this.classList.toggle('active');
+        });
+    }
+}
+
+function closeMobileMenu() {
+    const mobileMenu = document.getElementById('mobileMenu');
+    const menuToggle = document.getElementById('navToggle');
+    
+    if (mobileMenu) {
+        mobileMenu.classList.add('hidden');
+    }
+    if (menuToggle) {
+        menuToggle.classList.remove('active');
+    }
+}
+
+// Theme Toggle
+function initializeThemeToggle() {
+    const themeToggle = document.getElementById('themeToggle');
+    const mobileThemeToggle = document.getElementById('mobileThemeToggle');
+    
+    // Check for saved theme preference or respect OS preference
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+        updateThemeToggleIcons(true);
+    }
+    
+    // Desktop theme toggle
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            toggleTheme();
+        });
+    }
+    
+    // Mobile theme toggle
+    if (mobileThemeToggle) {
+        mobileThemeToggle.addEventListener('click', function() {
+            toggleTheme();
+            closeMobileMenu();
+        });
+    }
+    
+    // Listen for OS theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.getItem('theme')) {
+            if (e.matches) {
+                document.documentElement.classList.add('dark');
+                updateThemeToggleIcons(true);
+            } else {
+                document.documentElement.classList.remove('dark');
+                updateThemeToggleIcons(false);
+            }
+        }
+    });
+}
+
+function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    updateThemeToggleIcons(isDark);
+}
+
+function updateThemeToggleIcons(isDark) {
+    const desktopIcon = document.querySelector('#themeToggle .material-symbols-outlined');
+    const mobileIcon = document.querySelector('#mobileThemeToggle .material-symbols-outlined');
+    
+    if (desktopIcon) {
+        desktopIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+    }
+    if (mobileIcon) {
+        mobileIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+    }
+}
+
+// Search Functionality
+function initializeSearch() {
+    const searchInput = document.getElementById('studentSearch');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', debounce(function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            filterStudents(searchTerm);
+        }, 300));
+    }
+}
+
+function filterStudents(searchTerm) {
+    const studentCards = document.querySelectorAll('.student-card');
+    
+    studentCards.forEach(card => {
+        const name = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+        const skills = Array.from(card.querySelectorAll('.skill-tag') || []).map(el => el.textContent.toLowerCase()).join(' ');
+        const college = card.querySelector('.card-subtitle')?.textContent.toLowerCase() || '';
+        
+        const matches = name.includes(searchTerm) || 
+                       skills.includes(searchTerm) || 
+                       college.includes(searchTerm);
+        
+        card.style.display = matches ? 'block' : 'none';
+    });
+}
+
+// Filter Functionality
+function initializeFilters() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.getAttribute('data-filter');
+            
+            // Update active state
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Apply filter
+            filterProjects(filter);
+        });
+    });
+}
+
+function filterProjects(category) {
+    const projectCards = document.querySelectorAll('.project-card');
+    
+    projectCards.forEach(card => {
+        if (category === 'all') {
+            card.style.display = 'block';
+        } else {
+            // For demo purposes, just show all since we don't have category attribute
+            card.style.display = 'block';
+        }
+    });
+}
+
+// Form Handlers
+function setupFormHandlers() {
+    // Project form
+    const projectForm = document.getElementById('projectForm');
+    if (projectForm) {
+        projectForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Project posted successfully! Students will be notified.');
+            this.reset();
+        });
+    }
+    
+    // Contact form
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Thank you for your submission! We\'ll connect you with suitable collaborators soon.');
+            this.reset();
+        });
+    }
+}
+
+// Scroll Effects Functionality
+function initializeScrollEffects() {
+    const scrollProgressBar = document.querySelector('.scroll-progress-bar');
+    const backToTopButton = document.getElementById('backToTop');
+    
+    // Scroll progress indicator
+    window.addEventListener('scroll', function() {
+        const scrollTop = window.pageYOffset;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        
+        if (scrollProgressBar) {
+            scrollProgressBar.style.transform = `scaleX(${scrollPercent / 100})`;
+        }
+        
+        // Back to top button visibility
+        if (backToTopButton) {
+            if (scrollTop > 300) {
+                backToTopButton.classList.add('visible');
+            } else {
+                backToTopButton.classList.remove('visible');
+            }
+        }
+    });
+    
+    // Back to top button click handler
+    if (backToTopButton) {
+        backToTopButton.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+    
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    console.log('📊 Scroll effects initialized');
+}
+
+// Mock data for initial display
+function populateMockData() {
+    // Populate with sample projects if none loaded from API
+    if (document.getElementById('projectsGrid') && currentState.projects.length === 0) {
+        const mockProjects = getMockProjects();
+        currentState.projects = mockProjects;
+        renderProjects();
+    }
+    
+    // Populate with sample profiles if none loaded from API
+    if (document.getElementById('studentsGrid') && currentState.profiles.length === 0) {
+        const mockProfiles = getMockProfiles();
+        currentState.profiles = mockProfiles;
+        renderProfiles();
+    }
+}
+
+// Utility function to show student profile
+function showStudentProfile(name) {
+    alert(`Viewing profile for ${name}\n\nIn a real application, this would show detailed student information.`);
+}
+
+// Utility function to show project details
+function showProjectDetails(title) {
+    alert(`Viewing details for: ${title}\n\nIn a real application, this would show full project details and application form.`);
+}
+
+// Utility function to connect with student
+function connectWithStudent(userId) {
+    if (!currentState.isAuthenticated) {
+        showNotification('Please login to connect with students', 'warning');
+        showPage('login');
+        return;
+    }
+    
+    alert(`Connecting with student (ID: ${userId})\n\nIn a real application, this would initiate a connection request.`);
+}
+
+// Utility function to apply to project
+function applyToProject(projectId) {
+    if (!currentState.isAuthenticated) {
+        showNotification('Please login to apply for projects', 'warning');
+        showPage('login');
+        return;
+    }
+    
+    alert(`Applying to project (ID: ${projectId})\n\nIn a real application, this would submit an application.`);
+}
+
 // Initialize the integrated application
 async function initializeIntegratedApp() {
     console.log('Initializing integrated application...');
     
-    // Check authentication status
-    await checkAuthStatus();
-    
-    // Load initial data
-    await loadInitialData();
-    
-    // Setup event listeners
-    setupEventListeners();
-    
-    // Update UI based on auth state
-    updateAuthUI();
-    
-    console.log('Integrated application initialized successfully!');
+    try {
+        // Setup event listeners first to ensure basic functionality
+        setupEventListeners();
+        
+        // Update UI based on auth state
+        updateAuthUI();
+        
+        // Check authentication status
+        await checkAuthStatus();
+        
+        // Load initial data
+        await loadInitialData();
+        
+        console.log('Integrated application initialized successfully!');
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        showNotification('Application initialization failed, loading with limited functionality', 'warning');
+    } finally {
+        // Always hide the loading indicator
+        setTimeout(hideLoadingIndicator, 1000);
+    }
 }
 
 // Authentication Functions
 async function checkAuthStatus() {
     try {
         const user = await api.getCurrentUser();
-        currentState.isAuthenticated = true;
-        currentState.currentUser = user;
-        console.log('User authenticated:', user.username);
+        if (user) {  // Check if user object exists (not null)
+            currentState.isAuthenticated = true;
+            currentState.currentUser = user;
+            console.log('User authenticated:', user.username);
+        } else {
+            console.log('No authenticated user found');
+            currentState.isAuthenticated = false;
+            currentState.currentUser = null;
+        }
     } catch (error) {
-        console.log('No valid authentication token found');
+        console.log('Error checking authentication status:', error.message);
         currentState.isAuthenticated = false;
         currentState.currentUser = null;
     }
@@ -125,6 +547,7 @@ async function loadInitialData() {
         
     } catch (error) {
         console.error('Failed to load initial data:', error);
+        showNotification('Could not connect to server, loading demo content', 'info');
         // Fall back to mock data if API unavailable
         loadMockData();
     }
@@ -133,7 +556,7 @@ async function loadInitialData() {
 function loadMockData() {
     console.log('Loading mock data as fallback...');
     currentState.projects = getMockProjects();
-    currentState.profiles = getMockProfiles();
+    currentState.profiles = getIndianStudentProfiles(); // Use Indian student profiles instead of generic mock profiles
     renderProjects();
     renderProfiles();
 }
@@ -157,10 +580,18 @@ function renderProfiles() {
     
     grid.innerHTML = '';
     
+    // If no profiles loaded from API, use mock data
+    if (currentState.profiles.length === 0) {
+        currentState.profiles = getIndianStudentProfiles();
+    }
+    
     currentState.profiles.forEach(profile => {
         const card = createProfileCard(profile);
         grid.appendChild(card);
     });
+    
+    // Also render talent cards on the services page
+    renderTalentCards();
 }
 
 function createProjectCard(project) {
@@ -214,6 +645,413 @@ function createProfileCard(profile) {
         </div>
     `;
     return card;
+}
+
+function createTalentCard(profile) {
+    const card = document.createElement('div');
+    card.className = 'talent-card card';
+    card.innerHTML = `
+        <div class="flex flex-col items-center text-center p-4">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg mb-3">
+                ${getInitials(profile.first_name, profile.last_name)}
+            </div>
+            <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-1">${profile.first_name} ${profile.last_name}</h3>
+            <p class="text-slate-600 dark:text-slate-400 font-medium mb-2">${profile.role || 'Developer'}</p>
+            <div class="mb-3">
+                <div class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Skills</div>
+                <div class="flex flex-wrap gap-1 justify-center">
+                    ${(JSON.parse(profile.skills || '[]') || []).slice(0, 3).map(skill => 
+                        '<span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs rounded-full">' + skill + '</span>'
+                    ).join('')}
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">College</div>
+                <div class="text-sm text-slate-600 dark:text-slate-400 font-medium">${profile.college}</div>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">${profile.bio || 'Passionate about technology and innovation.'}</p>
+            <button class="btn btn-primary btn-small w-full" onclick="connectWithStudent(${profile.user_id})">
+                Connect
+            </button>
+        </div>
+    `;
+    return card;
+}
+
+function renderTalentCards() {
+    const grid = document.getElementById('talentGrid');
+    if (!grid) return;
+    
+    // Clear the grid
+    grid.innerHTML = '';
+    
+    // Get talent profiles (first 15 from the Indian student profiles)
+    const talentProfiles = getTalentProfiles();
+    
+    talentProfiles.forEach(profile => {
+        const card = createTalentCard(profile);
+        grid.appendChild(card);
+    });
+}
+
+function getIndianStudentProfiles() {
+    return [
+        {
+            user_id: 1,
+            first_name: "Arjun",
+            last_name: "Patel",
+            college: "IIT Bombay",
+            bio: "Full Stack Developer with expertise in MERN stack and cloud technologies.",
+            skills: JSON.stringify(["React", "Node.js", "MongoDB", "AWS"]),
+            experience: "3 years",
+            role: "Full Stack Developer"
+        },
+        {
+            user_id: 2,
+            first_name: "Priya",
+            last_name: "Sharma",
+            college: "IIT Delhi",
+            bio: "ML Engineer specializing in computer vision and NLP applications.",
+            skills: JSON.stringify(["Python", "TensorFlow", "PyTorch", "OpenCV"]),
+            experience: "2 years",
+            role: "ML Engineer"
+        },
+        {
+            user_id: 3,
+            first_name: "Rohan",
+            last_name: "Mehta",
+            college: "IIT Madras",
+            bio: "Mobile App Developer creating cross-platform solutions with Flutter.",
+            skills: JSON.stringify(["Flutter", "Dart", "Firebase", "API Integration"]),
+            experience: "2 years",
+            role: "Mobile Developer"
+        },
+        {
+            user_id: 4,
+            first_name: "Ananya",
+            last_name: "Singh",
+            college: "NID Ahmedabad",
+            bio: "UI/UX Designer focused on creating intuitive user experiences.",
+            skills: JSON.stringify(["Figma", "Adobe XD", "Prototyping", "User Research"]),
+            experience: "3 years",
+            role: "UI/UX Designer"
+        },
+        {
+            user_id: 5,
+            first_name: "Vikram",
+            last_name: "Kumar",
+            college: "BITS Pilani",
+            bio: "DevOps Engineer with expertise in cloud infrastructure and CI/CD.",
+            skills: JSON.stringify(["AWS", "Docker", "Kubernetes", "Jenkins"]),
+            experience: "2 years",
+            role: "DevOps Engineer"
+        },
+        {
+            user_id: 6,
+            first_name: "Meera",
+            last_name: "Desai",
+            college: "IISc Bangalore",
+            bio: "Data Scientist with strong statistical modeling and visualization skills.",
+            skills: JSON.stringify(["Python", "R", "SQL", "Tableau"]),
+            experience: "2 years",
+            role: "Data Scientist"
+        },
+        {
+            user_id: 7,
+            first_name: "Karan",
+            last_name: "Gupta",
+            college: "IIIT Hyderabad",
+            bio: "Blockchain developer building decentralized applications.",
+            skills: JSON.stringify(["Solidity", "Ethereum", "Web3.js", "Smart Contracts"]),
+            experience: "1 year",
+            role: "Blockchain Developer"
+        },
+        {
+            user_id: 8,
+            first_name: "Sneha",
+            last_name: "Reddy",
+            college: "Jadavpur University",
+            bio: "Cybersecurity analyst with expertise in ethical hacking.",
+            skills: JSON.stringify(["Network Security", "Ethical Hacking", "Risk Assessment", "SIEM"]),
+            experience: "2 years",
+            role: "Security Analyst"
+        },
+        {
+            user_id: 9,
+            first_name: "Aditya",
+            last_name: "Verma",
+            college: "DITU, Greater Noida",
+            bio: "Game developer passionate about creating immersive experiences.",
+            skills: JSON.stringify(["Unity", "C#", "3D Modeling", "VR/AR"]),
+            experience: "1 year",
+            role: "Game Developer"
+        },
+        {
+            user_id: 10,
+            first_name: "Neha",
+            last_name: "Joshi",
+            college: "XLRI Jamshedpur",
+            bio: "Product Manager with technical background in software development.",
+            skills: JSON.stringify(["Agile", "Scrum", "Product Strategy", "Market Research"]),
+            experience: "3 years",
+            role: "Product Manager"
+        },
+        {
+            user_id: 11,
+            first_name: "Rajesh",
+            last_name: "Pillai",
+            college: "Anna University",
+            bio: "Cloud architect designing scalable enterprise solutions.",
+            skills: JSON.stringify(["Azure", "GCP", "Microservices", "Serverless"]),
+            experience: "4 years",
+            role: "Cloud Architect"
+        },
+        {
+            user_id: 12,
+            first_name: "Tanvi",
+            last_name: "Shah",
+            college: "DAIICT Gandhinagar",
+            bio: "Frontend specialist creating responsive and accessible interfaces.",
+            skills: JSON.stringify(["React", "Vue.js", "TypeScript", "GraphQL"]),
+            experience: "2 years",
+            role: "Frontend Engineer"
+        },
+        {
+            user_id: 13,
+            first_name: "Manish",
+            last_name: "Rao",
+            college: "COEP Pune",
+            bio: "Backend engineer specializing in high-performance systems.",
+            skills: JSON.stringify(["Go", "Python", "Redis", "PostgreSQL"]),
+            experience: "2 years",
+            role: "Backend Developer"
+        },
+        {
+            user_id: 14,
+            first_name: "Kavya",
+            last_name: "Nair",
+            college: "Christ University",
+            bio: "Content strategist with technical writing expertise.",
+            skills: JSON.stringify(["SEO", "Technical Writing", "Brand Strategy", "Content Marketing"]),
+            experience: "2 years",
+            role: "Content Strategist"
+        },
+        {
+            user_id: 15,
+            first_name: "Deepak",
+            last_name: "Menon",
+            college: "NIT Trichy",
+            bio: "IoT developer building connected device ecosystems.",
+            skills: JSON.stringify(["Embedded Systems", "Raspberry Pi", "Arduino", "MQTT"]),
+            experience: "2 years",
+            role: "IoT Developer"
+        },
+        {
+            user_id: 16,
+            first_name: "Pooja",
+            last_name: "Bhatia",
+            college: "Thapar Institute",
+            bio: "QA engineer specializing in test automation frameworks.",
+            skills: JSON.stringify(["Selenium", "Cypress", "JUnit", "TestNG"]),
+            experience: "2 years",
+            role: "QA Automation Engineer"
+        },
+        {
+            user_id: 17,
+            first_name: "Siddharth",
+            last_name: "Iyer",
+            college: "SRM University",
+            bio: "AR/VR developer creating immersive digital experiences.",
+            skills: JSON.stringify(["Unity3D", "ARKit", "ARCore", "3D Graphics"]),
+            experience: "1 year",
+            role: "AR/VR Developer"
+        },
+        {
+            user_id: 18,
+            first_name: "Ritu",
+            last_name: "Malhotra",
+            college: "IMT Ghaziabad",
+            bio: "Business analyst bridging technical and business teams.",
+            skills: JSON.stringify(["Requirements Gathering", "Process Modeling", "Data Analysis", "Stakeholder Management"]),
+            experience: "3 years",
+            role: "Business Analyst"
+        },
+        {
+            user_id: 19,
+            first_name: "Amitabh",
+            last_name: "Choudhary",
+            college: "BIT Mesra",
+            bio: "Database administrator ensuring optimal performance and security.",
+            skills: JSON.stringify(["Oracle", "MySQL", "MongoDB", "Database Design"]),
+            experience: "3 years",
+            role: "Database Administrator"
+        },
+        {
+            user_id: 20,
+            first_name: "Swati",
+            last_name: "Agarwal",
+            college: "MICA Ahmedabad",
+            bio: "Digital marketing specialist driving growth through data-driven campaigns.",
+            skills: JSON.stringify(["PPC", "Social Media", "Analytics", "Growth Hacking"]),
+            experience: "2 years",
+            role: "Digital Marketing Specialist"
+        }
+    ];
+}
+
+function getTalentProfiles() {
+    return [
+        {
+            user_id: 1,
+            first_name: "Arjun",
+            last_name: "Patel",
+            college: "IIT Bombay",
+            bio: "Full Stack Developer with expertise in MERN stack and cloud technologies.",
+            skills: JSON.stringify(["React", "Node.js", "MongoDB", "AWS"]),
+            experience: "3 years",
+            role: "Full Stack Developer"
+        },
+        {
+            user_id: 2,
+            first_name: "Priya",
+            last_name: "Sharma",
+            college: "IIT Delhi",
+            bio: "ML Engineer specializing in computer vision and NLP applications.",
+            skills: JSON.stringify(["Python", "TensorFlow", "PyTorch", "OpenCV"]),
+            experience: "2 years",
+            role: "ML Engineer"
+        },
+        {
+            user_id: 3,
+            first_name: "Rohan",
+            last_name: "Mehta",
+            college: "IIT Madras",
+            bio: "Mobile App Developer creating cross-platform solutions with Flutter.",
+            skills: JSON.stringify(["Flutter", "Dart", "Firebase", "API Integration"]),
+            experience: "2 years",
+            role: "Mobile Developer"
+        },
+        {
+            user_id: 4,
+            first_name: "Ananya",
+            last_name: "Singh",
+            college: "NID Ahmedabad",
+            bio: "UI/UX Designer focused on creating intuitive user experiences.",
+            skills: JSON.stringify(["Figma", "Adobe XD", "Prototyping", "User Research"]),
+            experience: "3 years",
+            role: "UI/UX Designer"
+        },
+        {
+            user_id: 5,
+            first_name: "Vikram",
+            last_name: "Kumar",
+            college: "BITS Pilani",
+            bio: "DevOps Engineer with expertise in cloud infrastructure and CI/CD.",
+            skills: JSON.stringify(["AWS", "Docker", "Kubernetes", "Jenkins"]),
+            experience: "2 years",
+            role: "DevOps Engineer"
+        },
+        {
+            user_id: 6,
+            first_name: "Meera",
+            last_name: "Desai",
+            college: "IISc Bangalore",
+            bio: "Data Scientist with strong statistical modeling and visualization skills.",
+            skills: JSON.stringify(["Python", "R", "SQL", "Tableau"]),
+            experience: "2 years",
+            role: "Data Scientist"
+        },
+        {
+            user_id: 7,
+            first_name: "Karan",
+            last_name: "Gupta",
+            college: "IIIT Hyderabad",
+            bio: "Blockchain developer building decentralized applications.",
+            skills: JSON.stringify(["Solidity", "Ethereum", "Web3.js", "Smart Contracts"]),
+            experience: "1 year",
+            role: "Blockchain Developer"
+        },
+        {
+            user_id: 8,
+            first_name: "Sneha",
+            last_name: "Reddy",
+            college: "Jadavpur University",
+            bio: "Cybersecurity analyst with expertise in ethical hacking.",
+            skills: JSON.stringify(["Network Security", "Ethical Hacking", "Risk Assessment", "SIEM"]),
+            experience: "2 years",
+            role: "Security Analyst"
+        },
+        {
+            user_id: 9,
+            first_name: "Aditya",
+            last_name: "Verma",
+            college: "DITU, Greater Noida",
+            bio: "Game developer passionate about creating immersive experiences.",
+            skills: JSON.stringify(["Unity", "C#", "3D Modeling", "VR/AR"]),
+            experience: "1 year",
+            role: "Game Developer"
+        },
+        {
+            user_id: 10,
+            first_name: "Neha",
+            last_name: "Joshi",
+            college: "XLRI Jamshedpur",
+            bio: "Product Manager with technical background in software development.",
+            skills: JSON.stringify(["Agile", "Scrum", "Product Strategy", "Market Research"]),
+            experience: "3 years",
+            role: "Product Manager"
+        },
+        {
+            user_id: 11,
+            first_name: "Rajesh",
+            last_name: "Pillai",
+            college: "Anna University",
+            bio: "Cloud architect designing scalable enterprise solutions.",
+            skills: JSON.stringify(["Azure", "GCP", "Microservices", "Serverless"]),
+            experience: "4 years",
+            role: "Cloud Architect"
+        },
+        {
+            user_id: 12,
+            first_name: "Tanvi",
+            last_name: "Shah",
+            college: "DAIICT Gandhinagar",
+            bio: "Frontend specialist creating responsive and accessible interfaces.",
+            skills: JSON.stringify(["React", "Vue.js", "TypeScript", "GraphQL"]),
+            experience: "2 years",
+            role: "Frontend Engineer"
+        },
+        {
+            user_id: 13,
+            first_name: "Manish",
+            last_name: "Rao",
+            college: "COEP Pune",
+            bio: "Backend engineer specializing in high-performance systems.",
+            skills: JSON.stringify(["Go", "Python", "Redis", "PostgreSQL"]),
+            experience: "2 years",
+            role: "Backend Developer"
+        },
+        {
+            user_id: 14,
+            first_name: "Kavya",
+            last_name: "Nair",
+            college: "Christ University",
+            bio: "Content strategist with technical writing expertise.",
+            skills: JSON.stringify(["SEO", "Technical Writing", "Brand Strategy", "Content Marketing"]),
+            experience: "2 years",
+            role: "Content Strategist"
+        },
+        {
+            user_id: 15,
+            first_name: "Deepak",
+            last_name: "Menon",
+            college: "NIT Trichy",
+            bio: "IoT developer building connected device ecosystems.",
+            skills: JSON.stringify(["Embedded Systems", "Raspberry Pi", "Arduino", "MQTT"]),
+            experience: "2 years",
+            role: "IoT Developer"
+        }
+    ];
 }
 
 // Helper Functions
@@ -465,31 +1303,123 @@ function debounce(func, wait) {
     };
 }
 
-// Initialize when DOM is loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeIntegratedApp);
-} else {
-    initializeIntegratedApp();
+// Global error handler
+window.addEventListener('error', function(e) {
+    console.error('Global error:', e.error);
+    hideLoadingIndicator();
+});
+
+// Function to track user activity for analytics
+async function trackActivity(activityType, additionalData = {}) {
+    try {
+        // Get current page URL
+        const pageUrl = window.location.href;
+        
+        // Get referrer
+        const referrer = document.referrer;
+        
+        // Get element information if available
+        let elementId = null;
+        let elementClass = null;
+        
+        if (additionalData.event && additionalData.event.target) {
+            elementId = additionalData.event.target.id || null;
+            elementClass = additionalData.event.target.className || null;
+        }
+        
+        const activityData = {
+            activity_type: activityType,
+            page_url: pageUrl,
+            element_id: elementId,
+            element_class: elementClass,
+            referrer: referrer,
+            metadata: {
+                ...additionalData,
+                timestamp: new Date().toISOString()
+            }
+        };
+        
+        // Send to analytics API
+        await api.trackActivity(activityData);
+        
+        console.log('Activity tracked:', activityType);
+    } catch (error) {
+        console.error('Failed to track activity:', error);
+    }
 }
 
-// Make functions globally available
-window.handleLogin = handleLogin;
-window.handleRegister = handleRegister;
-window.handleLogout = handleLogout;
-window.applyToProject = function(projectId) {
-    if (!currentState.isAuthenticated) {
-        showNotification('Please login to apply for projects', 'warning');
-        showPage('login');
-        return;
-    }
-    showNotification(`Applied to project ${projectId}!`, 'success');
-};
+// Enhanced event listener setup to track activities
+function setupEnhancedEventListeners() {
+    // Track page views
+    window.addEventListener('hashchange', function() {
+        const page = window.location.hash.substring(1) || 'home';
+        trackActivity('page_view', { page: page });
+    });
+    
+    // Track button clicks
+    document.addEventListener('click', function(event) {
+        const target = event.target;
+        
+        // Track clicks on buttons, links, and other interactive elements
+        if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.classList.contains('btn') || target.classList.contains('link')) {
+            const elementInfo = {
+                tag: target.tagName,
+                id: target.id,
+                className: target.className,
+                text: target.textContent?.trim().substring(0, 50) || '',
+                href: target.href || '',
+                event: event
+            };
+            
+            trackActivity('button_click', elementInfo);
+        }
+    });
+    
+    // Track form submissions
+    document.addEventListener('submit', function(event) {
+        const target = event.target;
+        if (target.tagName === 'FORM') {
+            const formInfo = {
+                id: target.id,
+                action: target.action,
+                method: target.method,
+                event: event
+            };
+            
+            trackActivity('form_submit', formInfo);
+        }
+    });
+    
+    // Track search interactions
+    document.addEventListener('input', function(event) {
+        const target = event.target;
+        if (target.type === 'search' || target.id === 'studentSearch' || target.classList.contains('search-input')) {
+            const searchInfo = {
+                search_term: target.value,
+                id: target.id,
+                event: event
+            };
+            
+            // Debounce search tracking to avoid too many calls
+            if (typeof debouncedSearchTracker === 'undefined') {
+                let searchTimeout;
+                window.debouncedSearchTracker = function(term) {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        trackActivity('search', searchInfo);
+                    }, 1000); // Track search after 1 second of inactivity
+                };
+            }
+            window.debouncedSearchTracker(target.value);
+        }
+    });
+}
 
-window.connectWithStudent = function(userId) {
-    if (!currentState.isAuthenticated) {
-        showNotification('Please login to connect with students', 'warning');
-        showPage('login');
-        return;
-    }
-    showNotification(`Connection request sent to user ${userId}!`, 'success');
-};
+// Initialize enhanced event tracking
+setupEnhancedEventListeners();
+
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('Unhandled promise rejection:', e.reason);
+    hideLoadingIndicator();
+});
+

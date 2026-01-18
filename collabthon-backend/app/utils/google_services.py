@@ -7,6 +7,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from google.cloud import storage, vision
 import stripe
+import googlemaps
 from app.core.config import settings
 
 class GoogleServices:
@@ -127,3 +128,7 @@ class VisionService:
 google_services = GoogleServices()
 storage_service = StorageService()
 vision_service = VisionService()
+
+# Import and expose additional services
+from .maps_service import maps_service
+from .translation_service import translation_service

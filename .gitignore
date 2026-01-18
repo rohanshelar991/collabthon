@@ -1,0 +1,348 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.env
+.venv
+venv/
+env/
+ENV/
+.ENV
+.pytest_cache/
+.coverage
+htmlcov/
+.cov/
+.nyc_output/
+istanbul/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.db-journal
+
+# Logs
+*.log
+logs/
+
+# Environment specific
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Secrets
+secrets/
+*.key
+*.pem
+*.crt
+*.cert
+
+# Local configuration
+config/local/
+*.local
+
+# Coverage reports
+coverage/
+.coverage.*
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# FastAPI auto-generated
+main.py-e
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+*.py.class
+
+# Documentation
+docs/_build/
+
+# Backup files
+*~
+.#*
+*.bak
+*.old
+*.orig
+
+# IDE specific
+.vs/
+*.userprefs
+*.useroptions
+*.suo
+*.user
+*.aps
+*.ncb
+*.obj
+*.ilk
+*.pdb
+*.sdf
+*.sln.docstates
+
+# Python virtual environments
+.envrc
+.flaskenv
+.python-version
+
+# FastAPI and related
+alembic/
+alembic.ini
+alembic_version/
+
+# Testing
+.pytest_cache/
+.hypothesis/
+.coverage
+.coverage.*
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg-info/
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre checker
+.pyre/
+
+# IDE
+.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Environment
+.env
+.env.local
+.env.dev
+.env.prod
+.env.testing
+.env.staging
+.env.production
+.env.development
+.env.docker
+
+# Database
+*.sqlite
+*.sqlite3
+
+# Backup and temp files
+*.bak
+*.tmp
+*.temp
+*~
+*.swp
+*.swo
+
+# Docker
+.dockerenv
+.dockerinit
+
+# FastAPI
+main.py-e
+
+# Local development
+local/
+dev/
+development/
+
+# Configuration
+config/
+settings_local.py
+local_settings.py
+
+# Sensitive data
+credentials.json
+client_secret.json
+service-account-key.json
+google-services.json
+google-services.json
+google-services.plist
+GoogleService-Info.plist
+firebase-config.json
+
+# Google Cloud
+.gcloud/
+.gcloudignore
+
+# Google API
+client_secrets.json
+google_api_key.json
+
+# Stripe
+stripe_keys.json
+stripe_config.json
+
+# AWS
+.aws/
+.aws/config
+.aws/credentials
+
+# SSH
+.ssh/
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Thumbs.db:encryptable
+iCloudPhotos.DB
+iCloudSync.db
+.Dragonden

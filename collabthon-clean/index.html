@@ -317,9 +317,9 @@
                         <span class="material-symbols-outlined mr-2">school</span>
                         <span>Student Network</span>
                     </div>
-                    <h2 id="portfolio-heading" class="text-4xl font-bold text-slate-900 dark:text-white mb-4">Discover Top Talent</h2>
+                    <h2 id="portfolio-heading" class="text-4xl font-bold text-slate-900 dark:text-white mb-4">Discover Top Indian Talent</h2>
                     <p class="portfolio-description text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
-                        Connect with skilled students across various disciplines. Find the perfect collaborators for your next project or freelance opportunity.
+                        Connect with skilled students from top Indian institutions across various disciplines. Find the perfect collaborators for your next project or freelance opportunity.
                     </p>
                 </header>
                 
@@ -341,7 +341,7 @@
                     </div>
                 </div>
                 
-                <div class="students-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="studentsGrid" role="tabpanel" aria-live="polite">
+                <div class="students-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="studentsGrid" role="tabpanel" aria-live="polite">
                     <!-- Students will be populated by JavaScript -->
                 </div>
             </div>
@@ -361,46 +361,44 @@
                     </p>
                 </header>
                 
-                <div class="services-layout grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div class="projects-container lg:col-span-1">
-                        <div class="projects-grid grid grid-cols-1 md:grid-cols-2 gap-8" id="projectsGrid">
-                            <!-- Projects will be populated by JavaScript -->
-                        </div>
+                <!-- Form moved to top -->
+                <div class="project-form-container max-w-4xl mx-auto mb-12">
+                    <div class="card project-form-card">
+                        <h3 class="form-title text-xl font-bold mb-4">Post New Project</h3>
+                        <form id="projectForm" class="project-submission-form">
+                            <div class="form-group mb-4">
+                                <label for="projectTitle" class="block text-sm font-medium mb-2">Project Title</label>
+                                <input type="text" id="projectTitle" placeholder="Enter project title" class="form-input w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500" required>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label for="projectDescription" class="block text-sm font-medium mb-2">Description</label>
+                                <textarea id="projectDescription" placeholder="Describe your project requirements" rows="4" class="form-textarea w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500" required></textarea>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label for="requiredSkills" class="block text-sm font-medium mb-2">Required Skills</label>
+                                <input type="text" id="requiredSkills" placeholder="e.g., React, Node.js, Python" class="form-input w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                            </div>
+                            <div class="form-group mb-6">
+                                <label for="budgetRange" class="block text-sm font-medium mb-2">Budget Range</label>
+                                <select id="budgetRange" class="form-select w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500">
+                                    <option value="500-1000">₹500-₹1000</option>
+                                    <option value="1000-3000">₹1000-₹3000</option>
+                                    <option value="3000-5000">₹3000-₹5000</option>
+                                    <option value="5000+">₹5000+</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full submit-button">
+                                <span class="material-symbols-outlined mr-2" aria-hidden="true">send</span>
+                                Post Project
+                            </button>
+                        </form>
                     </div>
-                    
-                    <aside class="project-form-sidebar lg:col-span-1">
-                        <div class="card project-form-card">
-                            <h3 class="form-title text-xl font-bold mb-4">Post New Project</h3>
-                            <form id="projectForm" class="project-submission-form">
-                                <div class="form-group mb-4">
-                                    <label for="projectTitle" class="block text-sm font-medium mb-2">Project Title</label>
-                                    <input type="text" id="projectTitle" placeholder="Enter project title" class="form-input w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500" required>
-                                </div>
-                                <div class="form-group mb-4">
-                                    <label for="projectDescription" class="block text-sm font-medium mb-2">Description</label>
-                                    <textarea id="projectDescription" placeholder="Describe your project requirements" rows="4" class="form-textarea w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500" required></textarea>
-                                </div>
-                                <div class="form-group mb-4">
-                                    <label for="requiredSkills" class="block text-sm font-medium mb-2">Required Skills</label>
-                                    <input type="text" id="requiredSkills" placeholder="e.g., React, Node.js, Python" class="form-input w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500">
-                                </div>
-                                <div class="form-group mb-6">
-                                    <label for="budgetRange" class="block text-sm font-medium mb-2">Budget Range</label>
-                                    <select id="budgetRange" class="form-select w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500">
-                                        <option value="500-1000">$500-$1000</option>
-                                        <option value="1000-3000">$1000-$3000</option>
-                                        <option value="3000-5000">$3000-$5000</option>
-                                        <option value="5000+">$5000+</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary w-full submit-button">
-                                    <span class="material-symbols-outlined mr-2" aria-hidden="true">send</span>
-                                    Post Project
-                                </button>
-                            </form>
-                        </div>
-                    </aside>
-
+                </div>
+                
+                <!-- Square format talent cards below the form -->
+                <div class="talent-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="talentGrid">
+                    <!-- Talent cards will be populated by JavaScript -->
+                </div>
             </div>
         </section>
 

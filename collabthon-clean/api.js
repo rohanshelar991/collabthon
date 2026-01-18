@@ -29,7 +29,8 @@ class CollabthonAPI {
         const config = {
             method: 'GET',
             ...options,
-            headers
+            headers,
+            credentials: 'include'  // Include cookies in cross-origin requests
         };
 
         try {
@@ -82,7 +83,15 @@ class CollabthonAPI {
     }
 
     async getCurrentUser() {
-        return this.request('/auth/me');
+        try {
+            return await this.request('/auth/me');
+        } catch (error) {
+            // Return null if user is not authenticated
+            if (error.message.includes('401') || error.message.includes('403')) {
+                return null;
+            }
+            throw error;
+        }
     }
 
     async updateUser(userData) {
@@ -290,6 +299,141 @@ class CollabthonAPI {
 
     async getSubscriptionStats() {
         return this.request('/subscriptions/admin/stats');
+    }
+
+    // Analytics endpoints
+    async trackActivity(activityData) {
+        return this.request('/analytics/track-activity', {
+            method: 'POST',
+            body: JSON.stringify(activityData)
+        });
+    }
+
+    async getActivityStats(startDate, endDate) {
+        const params = new URLSearchParams();
+        if (startDate) params.append('start_date', startDate);
+        if (endDate) params.append('end_date', endDate);
+        
+        return this.request(`/analytics/user-activity/stats?${params.toString()}`);
+    }
+
+    async trackLocation(locationData) {
+        return this.request('/analytics/location-track', {
+            method: 'POST',
+            body: JSON.stringify(locationData)
+        });
+    }
+
+    // Advanced search endpoints
+    async searchProjectsAdvanced(filters = {}) {
+        const params = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+                params.append(key, value);
+            }
+        });
+        
+        return this.request(`/search-advanced/projects?${params.toString()}`);
+    }
+
+    async searchProfilesAdvanced(filters = {}) {
+        const params = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+                params.append(key, value);
+            }
+        });
+        
+        return this.request(`/search-advanced/profiles?${params.toString()}`);
+    }
+
+    async getTrendingSkills(days = 30) {
+        return this.request(`/search-advanced/trending-skills?days=${days}`);
+    }
+
+    async getProjectRecommendations() {
+        return this.request('/search-advanced/recommendations/projects');
+    }
+
+    async getProfileRecommendations() {
+        return this.request('/search-advanced/recommendations/profiles');
+    }
+
+    // Payment endpoints
+    async createCheckoutSession(plan, successUrl, cancelUrl) {
+        return this.request('/payments/create-checkout-session', {
+            method: 'POST',
+            body: JSON.stringify({
+                plan,
+                success_url: successUrl,
+                cancel_url: cancelUrl
+            })
+        });
+    }
+
+    async upgradeSubscription(plan) {
+        return this.request('/payments/upgrade-subscription', {
+            method: 'POST',
+            body: JSON.stringify({ plan })
+        });
+    }
+
+    async cancelSubscription(atPeriodEnd = true) {
+        return this.request('/payments/cancel-subscription', {
+            method: 'POST',
+            body: JSON.stringify({ at_period_end: atPeriodEnd })
+        });
+    }
+
+    async getSubscriptionStatus() {
+        return this.request('/payments/subscription-status');
+    }
+
+    // Notifications endpoints
+    async getNotifications() {
+        return this.request('/notifications');
+    }
+
+    async markNotificationAsRead(notificationId) {
+        return this.request(`/notifications/${notificationId}/read`, {
+            method: 'PUT'
+        });
+    }
+
+    async deleteNotification(notificationId) {
+        return this.request(`/notifications/${notificationId}`, {
+            method: 'DELETE'
+        });
+    }
+
+    // Admin endpoints
+    async getAdminStats() {
+        return this.request('/admin/stats');
+    }
+
+    async getAllUsers(skip = 0, limit = 100) {
+        return this.request(`/admin/users?skip=${skip}&limit=${limit}`);
+    }
+
+    async toggleUserActive(userId) {
+        return this.request(`/admin/users/${userId}/toggle-active`, {
+            method: 'PUT'
+        });
+    }
+
+    async getAllProjects(skip = 0, limit = 100, statusFilter = null) {
+        let url = `/admin/projects?skip=${skip}&limit=${limit}`;
+        if (statusFilter) {
+            url += `&status_filter=${statusFilter}`;
+        }
+        return this.request(url);
+    }
+
+    async updateProjectStatus(projectId, status) {
+        return this.request(`/admin/projects/${projectId}/update-status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status })
+        });
     }
 }
 

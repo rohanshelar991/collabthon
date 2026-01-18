@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Testing API Connection</h1>
+    <div id="results"></div>
+    <script>
+        async function testAPI() {
+            const resultsDiv = document.getElementById("results");
+            
+            try {
+                resultsDiv.innerHTML += "<p>Testing projects API...</p>";
+                const projectsResponse = await fetch("http://localhost:8000/api/v1/projects/?limit=5");
+                const projectsData = await projectsResponse.json();
+                resultsDiv.innerHTML += `<p>Projects API: Success - ${JSON.stringify(projectsData)}</p>`;
+            } catch (error) {
+                resultsDiv.innerHTML += `<p>Projects API Error: ${error.message}</p>`;
+            }
+            
+            try {
+                resultsDiv.innerHTML += "<p>Testing profiles API...</p>";
+                const profilesResponse = await fetch("http://localhost:8000/api/v1/profiles/?limit=5");
+                const profilesData = await profilesResponse.json();
+                resultsDiv.innerHTML += `<p>Profiles API: Success - ${JSON.stringify(profilesData)}</p>`;
+            } catch (error) {
+                resultsDiv.innerHTML += `<p>Profiles API Error: ${error.message}</p>`;
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>
