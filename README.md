@@ -1,4 +1,4 @@
-# Collabthon - College Student Collaboration Platform
+# Collabthon Platform
 
 ## Overview
 
@@ -114,7 +114,7 @@ collabthon-clean/
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/rohanshelar991/recurrsion.git
+git clone https://github.com/rohanshelar991/collabthon.git
 cd collabthon-backend
 ```
 

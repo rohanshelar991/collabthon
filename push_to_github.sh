@@ -48,7 +48,7 @@ else
 fi
 
 # Set up the remote origin
-REMOTE_URL="https://github.com/rohanshelar991/recurrsion.git"
+REMOTE_URL="https://github.com/rohanshelar991/collabthon.git"
 print_info "Setting up remote origin: $REMOTE_URL"
 
 # Remove existing origin if it exists and add the new one
@@ -466,18 +466,18 @@ print_success "Branch status: On main branch"
 
 # Check if the repository is private or public
 print_info "Checking repository visibility..."
-curl -s -o /dev/null -w "%{http_code}" "https://github.com/rohanshelar991/recurrsion.git" -o /dev/null
+curl -s -o /dev/null -w "%{http_code}" "https://github.com/rohanshelar991/collabthon.git" -o /dev/null
 if [ $? -eq 0 ]; then
-    print_success "Repository is accessible at: https://github.com/rohanshelar991/recurrsion"
+    print_success "Repository is accessible at: https://github.com/rohanshelar991/collabthon"
 else
     print_warning "Could not verify repository accessibility. It might be private."
-    print_info "Repository should be accessible at: https://github.com/rohanshelar991/recurrsion"
+    print_info "Repository should be accessible at: https://github.com/rohanshelar991/collabthon"
 fi
 
 print_info ""
 print_success "🎉 Collabthon Platform successfully pushed to GitHub!"
 print_info ""
-print_info "Repository URL: https://github.com/rohanshelar991/recurrsion"
+print_info "Repository URL: https://github.com/rohanshelar991/collabthon"
 print_info ""
 print_info "The repository contains:"
 print_info "- Complete backend with FastAPI and advanced features"
