@@ -12,6 +12,7 @@ export interface StudentProfile {
   skills: string[];
   photoURL?: string;
   available: boolean;
+  location?: { lat: number; lng: number; label?: string };
   createdAt?: Timestamp | FieldValue;
   updatedAt?: Timestamp | FieldValue;
 }

@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { logEvent } from '@/lib/analytics';
 
 const nav = [
   { href: '/dashboard' as Route, label: 'Overview', icon: Home },
@@ -25,6 +26,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => onAuthStateChanged(auth, (u) => setUser(u)), []);
+
+  useEffect(() => {
+    logEvent('page_view', { pathname });
+  }, [pathname]);
 
   useEffect(() => {
     if (!user) return;
