@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { GA4 } from '@/lib/ga';
 
-const inter = Inter({ subsets: ['latin'] });
+const grotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display' });
 
 export const metadata: Metadata = {
   title: 'Collabathon | Student Teaming Platform',
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className + ' bg-slate-50 dark:bg-slate-950'}>
+      <body className={`${grotesk.variable} bg-slate-50 dark:bg-slate-950`}>
         <ThemeProvider>
           {children}
           <Toaster />
