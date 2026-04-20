@@ -4,18 +4,38 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 const db = admin.firestore();
 
+async function writeAuditLog({ actorId, actorDisplayName, targetType, targetId, action, summary, metadata }) {
+  return db.collection('auditLogs').add({
+    actorId: actorId || 'system',
+    actorDisplayName: actorDisplayName || 'Automation',
+    targetType,
+    targetId,
+    action,
+    summary,
+    metadata: metadata || {},
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+async function notifyUser(userId, content, actorId, type = 'system', extra = {}) {
+  if (!userId) return null;
+  return db.collection('notifications').add({
+    userId,
+    actorId: actorId || 'system',
+    type,
+    content,
+    read: false,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    ...extra
+  });
+}
+
 // Set custom claims based on Firestore role doc on user creation
 exports.setUserRole = functions.auth.user().onCreate(async (user) => {
   const userDoc = await db.collection('users').doc(user.uid).get();
   const role = userDoc.exists ? userDoc.data().role : 'student';
   await admin.auth().setCustomUserClaims(user.uid, { role });
-  await db.collection('notifications').add({
-    userId: user.uid,
-    type: 'system',
-    content: `Welcome to Collabathon! Role set to ${role}.`,
-    read: false,
-    createdAt: admin.firestore.FieldValue.serverTimestamp()
-  });
+  await notifyUser(user.uid, `Welcome to Collabathon! Role set to ${role}.`, 'system', 'system');
 });
 
 // HTTP callable to refresh claims manually if role changes
@@ -28,3 +48,139 @@ exports.refreshRole = functions.https.onCall(async (data, context) => {
   await admin.auth().setCustomUserClaims(uid, { role });
   return { role };
 });
+
+exports.seedWorkspaceOnTeamCreate = functions.firestore
+  .document('teams/{teamId}')
+  .onCreate(async (snap, context) => {
+    const team = snap.data();
+    const teamId = context.params.teamId;
+    const existingSprints = await db
+      .collection('sprints')
+      .where('teamId', '==', teamId)
+      .limit(1)
+      .get();
+
+    if (existingSprints.empty) {
+      await db.collection('sprints').add({
+        teamId,
+        title: 'Sprint 1',
+        goal: `Launch the first milestone for ${team.workspaceName || 'this workspace'}.`,
+        status: 'active',
+        velocityTarget: 12,
+        createdBy: 'automation',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    await writeAuditLog({
+      actorId: 'automation',
+      actorDisplayName: 'Workspace Automation',
+      targetType: 'team',
+      targetId: teamId,
+      action: 'workspace.seeded',
+      summary: `Workspace automation seeded artifacts for team ${teamId}.`,
+      metadata: { projectId: team.projectId }
+    });
+  });
+
+exports.logApplicationLifecycle = functions.firestore
+  .document('applications/{applicationId}')
+  .onUpdate(async (change, context) => {
+    const before = change.before.data();
+    const after = change.after.data();
+    if (before.status === after.status) return null;
+
+    await writeAuditLog({
+      actorId: after.studentId,
+      actorDisplayName: after.studentName || 'Applicant',
+      targetType: 'project',
+      targetId: after.projectId,
+      action: 'application.status_changed',
+      summary: `Application ${context.params.applicationId} moved to ${after.status}.`,
+      metadata: {
+        from: before.status,
+        to: after.status,
+        studentId: after.studentId
+      }
+    });
+
+    return null;
+  });
+
+exports.notifyTaskAssignees = functions.firestore
+  .document('teamTasks/{taskId}')
+  .onWrite(async (change, context) => {
+    const after = change.after.exists ? change.after.data() : null;
+    const before = change.before.exists ? change.before.data() : null;
+
+    if (!after) return null;
+
+    const previousAssignees = new Set(before?.assigneeIds || []);
+    const nextAssignees = new Set(after.assigneeIds || []);
+    const newAssignees = [...nextAssignees].filter((id) => !previousAssignees.has(id));
+
+    await writeAuditLog({
+      actorId: after.createdBy || 'automation',
+      actorDisplayName: 'Task Automation',
+      targetType: 'task',
+      targetId: context.params.taskId,
+      action: change.before.exists ? 'task.synced' : 'task.created',
+      summary: `Task ${after.title} is now in ${after.status}.`,
+      metadata: {
+        teamId: after.teamId,
+        status: after.status,
+        priority: after.priority
+      }
+    });
+
+    await Promise.all(
+      newAssignees.map((userId) =>
+        notifyUser(
+          userId,
+          `You were assigned to task: ${after.title}.`,
+          after.createdBy || 'automation',
+          'team',
+          { projectId: after.teamId }
+        )
+      )
+    );
+
+    return null;
+  });
+
+exports.syncSubscriptionNotifications = functions.firestore
+  .document('subscriptions/{userId}')
+  .onWrite(async (change, context) => {
+    if (!change.after.exists) return null;
+
+    const before = change.before.exists ? change.before.data() : null;
+    const after = change.after.data();
+
+    if (before && before.status === after.status && before.planId === after.planId) {
+      return null;
+    }
+
+    await writeAuditLog({
+      actorId: 'stripe',
+      actorDisplayName: 'Stripe Sync',
+      targetType: 'subscription',
+      targetId: context.params.userId,
+      action: 'subscription.updated',
+      summary: `Subscription is now ${after.status} on ${after.planId}.`,
+      metadata: {
+        status: after.status,
+        planId: after.planId,
+        subscriptionId: after.subscriptionId || null
+      }
+    });
+
+    await notifyUser(
+      context.params.userId,
+      `Your subscription is now ${after.status} on the ${after.planId} plan.`,
+      'stripe',
+      'system'
+    );
+
+    return null;
+  });

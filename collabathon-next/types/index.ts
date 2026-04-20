@@ -22,6 +22,7 @@ export interface ClientProfile {
   userId: string;
   companyName: string;
   contactEmail: string;
+  projectType?: string;
   description?: string;
   website?: string;
   createdAt?: Timestamp | FieldValue;
@@ -37,7 +38,11 @@ export interface Project {
   budget?: number;
   deadline?: string;
   status: 'open' | 'in-progress' | 'completed';
+  priority?: 'starter' | 'growth' | 'flagship';
+  moderationStatus?: 'approved' | 'flagged' | 'hidden';
+  teamId?: string;
   createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
 }
 
 export interface Application {
@@ -46,14 +51,52 @@ export interface Application {
   studentId: string;
   message?: string;
   status: 'pending' | 'accepted' | 'rejected';
+  studentName?: string;
+  studentEmail?: string;
   createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
 }
 
 export interface Team {
   id: string;
   projectId: string;
   memberIds: string[];
+  clientId?: string;
+  workspaceName?: string;
+  status?: 'forming' | 'active' | 'completed';
   createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
+}
+
+export interface Sprint {
+  id: string;
+  teamId: string;
+  title: string;
+  goal?: string;
+  status: 'planned' | 'active' | 'completed';
+  startDate?: string;
+  endDate?: string;
+  velocityTarget?: number;
+  createdBy?: string;
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
+}
+
+export interface TeamTask {
+  id: string;
+  teamId: string;
+  sprintId?: string;
+  title: string;
+  description?: string;
+  status: 'backlog' | 'todo' | 'in-progress' | 'review' | 'done';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  assigneeIds?: string[];
+  labels?: string[];
+  storyPoints?: number;
+  dueDate?: string;
+  createdBy?: string;
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
 }
 
 export interface Message {
@@ -62,6 +105,7 @@ export interface Message {
   toId: string;
   participants?: string[];
   text: string;
+  read?: boolean;
   createdAt?: Timestamp | FieldValue;
 }
 
@@ -77,10 +121,14 @@ export interface Review {
 export interface Notification {
   id: string;
   userId: string;
-  type: 'collaboration' | 'application' | 'message';
+  actorId?: string;
+  projectId?: string;
+  applicationId?: string;
+  type: 'collaboration' | 'application' | 'message' | 'review' | 'team' | 'system';
   content: string;
   read: boolean;
   createdAt?: Timestamp | FieldValue;
+  readAt?: Timestamp | FieldValue;
 }
 
 export interface UserRecord {
@@ -89,5 +137,41 @@ export interface UserRecord {
   role: UserRole;
   displayName?: string;
   photoURL?: string;
+  accountStatus?: 'active' | 'review' | 'suspended';
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
+}
+
+export interface SubscriptionRecord {
+  id: string;
+  userId: string;
+  customerId?: string;
+  subscriptionId?: string;
+  priceId?: string;
+  planId: 'starter' | 'pro' | 'enterprise';
+  status:
+    | 'inactive'
+    | 'trialing'
+    | 'active'
+    | 'past_due'
+    | 'canceled'
+    | 'incomplete'
+    | 'paused';
+  seats?: number;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd?: boolean;
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
+}
+
+export interface AuditLog {
+  id: string;
+  actorId?: string;
+  actorDisplayName?: string;
+  targetType: 'user' | 'project' | 'task' | 'team' | 'subscription' | 'system';
+  targetId: string;
+  action: string;
+  summary: string;
+  metadata?: Record<string, unknown>;
   createdAt?: Timestamp | FieldValue;
 }

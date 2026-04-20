@@ -3,12 +3,49 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() { return request.auth != null; }
     function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
-    function hasRole(role) { return isSignedIn() && request.auth.token.role == role; }
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function userExists() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function userRole() {
+      return userExists() ? userDoc().data.role : null;
+    }
+    function userAccountStatus() {
+      return userExists() && userDoc().data.accountStatus != null
+        ? userDoc().data.accountStatus
+        : 'active';
+    }
+    function isActiveAccount() {
+      return isSignedIn() && userAccountStatus() != 'suspended';
+    }
+    function hasRole(role) {
+      return isSignedIn() && (
+        request.auth.token.role == role ||
+        userRole() == role
+      );
+    }
+    function ownsProject(projectId) {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/projects/$(projectId)).data.clientId == request.auth.uid;
+    }
+    function teamDoc(teamId) {
+      return get(/databases/$(database)/documents/teams/$(teamId));
+    }
+    function canAccessTeam(teamId) {
+      return isSignedIn() && (
+        hasRole('admin') ||
+        teamDoc(teamId).data.memberIds.hasAny([request.auth.uid]) ||
+        ownsProject(teamDoc(teamId).data.projectId)
+      );
+    }
 
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if isOwner(userId);
-      allow update, delete: if isOwner(userId);
+      allow update: if isOwner(userId) || hasRole('admin');
+      allow delete: if hasRole('admin');
     }
 
     match /students/{studentId} {
@@ -24,36 +61,75 @@ service cloud.firestore {
     }
 
     match /projects/{projectId} {
-      allow read: if true;
-      allow create: if hasRole('client');
-      allow update, delete: if hasRole('client') && request.auth.uid == request.resource.data.clientId;
+      allow read: if (
+        resource.data.moderationStatus != 'hidden' ||
+        hasRole('admin') ||
+        (isSignedIn() && resource.data.clientId == request.auth.uid)
+      );
+      allow create: if isActiveAccount() && hasRole('client') && request.resource.data.clientId == request.auth.uid;
+      allow update, delete: if (
+        hasRole('admin') ||
+        (isActiveAccount() && hasRole('client') && resource.data.clientId == request.auth.uid)
+      );
     }
 
     match /applications/{applicationId} {
-      allow create: if hasRole('student');
-      allow read: if isOwner(resource.data.studentId) || hasRole('client');
-      allow update: if hasRole('client');
+      allow create: if isActiveAccount() && hasRole('student') && request.resource.data.studentId == request.auth.uid;
+      allow read: if isOwner(resource.data.studentId) || ownsProject(resource.data.projectId) || hasRole('admin');
+      allow update: if ownsProject(resource.data.projectId) || hasRole('admin');
     }
 
     match /teams/{teamId} {
-      allow read: if true;
-      allow create, update: if hasRole('client') || hasRole('admin');
+      allow read: if canAccessTeam(teamId);
+      allow create, update: if ownsProject(request.resource.data.projectId) || hasRole('admin');
+    }
+
+    match /sprints/{sprintId} {
+      allow read: if canAccessTeam(resource.data.teamId);
+      allow create, update: if isActiveAccount() && canAccessTeam(request.resource.data.teamId);
+    }
+
+    match /teamTasks/{taskId} {
+      allow read: if canAccessTeam(resource.data.teamId);
+      allow create, update: if isActiveAccount() && canAccessTeam(request.resource.data.teamId);
     }
 
     match /messages/{messageId} {
-      allow create: if isSignedIn();
-      allow read: if isOwner(resource.data.fromId) || isOwner(resource.data.toId);
+      allow create: if isActiveAccount() &&
+        request.resource.data.fromId == request.auth.uid &&
+        request.resource.data.participants.hasAll([request.auth.uid]);
+      allow read: if isOwner(resource.data.fromId) || isOwner(resource.data.toId) || hasRole('admin');
     }
 
     match /reviews/{reviewId} {
-      allow create: if isSignedIn();
+      allow create: if isActiveAccount();
       allow read: if true;
     }
 
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && request.auth.uid == resource.data.userId;
-      allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
-      allow update: if isSignedIn() && request.auth.uid == request.resource.data.userId;
+      allow create: if isSignedIn() && (
+        request.auth.uid == request.resource.data.userId ||
+        request.auth.uid == request.resource.data.actorId ||
+        hasRole('admin')
+      );
+      allow update: if isSignedIn() && (
+        request.auth.uid == resource.data.userId ||
+        hasRole('admin')
+      );
+    }
+
+    match /subscriptions/{userId} {
+      allow read: if isOwner(userId) || hasRole('admin');
+      allow create, update, delete: if hasRole('admin');
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if hasRole('admin');
+      allow create: if isSignedIn() && (
+        hasRole('admin') ||
+        request.resource.data.actorId == request.auth.uid
+      );
     }
 
     match /{document=**} {

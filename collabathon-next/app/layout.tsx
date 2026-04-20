@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Space_Grotesk } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
@@ -13,9 +14,25 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://collabathon.local')
 };
 
+const themeInitScript = `
+  try {
+    var storedTheme = localStorage.getItem('theme');
+    var resolvedTheme = storedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    var root = document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(resolvedTheme);
+    root.style.colorScheme = resolvedTheme;
+  } catch (error) {}
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {themeInitScript}
+        </Script>
+      </head>
       <body className={`${grotesk.variable} bg-slate-50 dark:bg-slate-950`}>
         <ThemeProvider>
           {children}
