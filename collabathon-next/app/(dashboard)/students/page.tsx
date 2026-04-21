@@ -97,11 +97,11 @@ export default function StudentsPage() {
 
   return (
     <AppShell>
-      <section className="hero-panel p-7 text-white">
+      <section className="hero-panel p-5 sm:p-7 text-white">
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-3xl">
             <p className="data-kicker text-cyan-200">Discovery engine</p>
-            <h1 className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-5xl">
+            <h1 className="mt-4 text-2xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
               Find standout student operators with sharper signal and stronger fit.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
@@ -110,7 +110,7 @@ export default function StudentsPage() {
             </p>
           </div>
 
-          <div className="grid min-w-[260px] gap-3">
+          <div className="grid w-full gap-3 md:min-w-[260px]">
             {metrics.map((metric) => {
               const Icon = metric.icon;
               return (

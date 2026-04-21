@@ -306,18 +306,18 @@ export default function WorkspacePage() {
 
   return (
     <AppShell>
-      <section className="mesh-panel p-7 text-white">
+      <section className="mesh-panel p-5 sm:p-7 text-white">
         <div className="relative z-[1] flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-3xl">
             <p className="data-kicker text-cyan-200">Team workspace</p>
-            <h1 className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-5xl">
+            <h1 className="mt-4 text-2xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
               Run delivery like a real product team with sprints, board movement, and shared execution context.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
               This workspace turns accepted applications into an actual execution surface: team selection, sprint setup, task flow, and delivery visibility.
             </p>
           </div>
-          <div className="grid min-w-[260px] gap-3 sm:grid-cols-4 sm:min-w-[620px] xl:min-w-[520px] xl:grid-cols-2">
+          <div className="grid w-full gap-3 sm:min-w-[320px] sm:grid-cols-2 lg:min-w-[620px] lg:grid-cols-4 xl:min-w-[520px] xl:grid-cols-2">
             {[
               { label: 'Teams', value: teams.length, icon: UsersRound },
               { label: 'Tasks', value: taskMetrics.total, icon: FolderKanban },
@@ -411,7 +411,7 @@ export default function WorkspacePage() {
 
             {selectedTeam ? (
               <>
-                <div className="mt-5 grid gap-4 md:grid-cols-4">
+                <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   <div className="insight-card">
                     <div className="relative z-[1]">
                       <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">

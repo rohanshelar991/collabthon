@@ -98,18 +98,18 @@ export default function NotificationsPage() {
   return (
     <AppShell>
       <div className="grid gap-6 xl:grid-cols-[1.1fr,0.9fr]">
-        <section className="hero-panel p-7 text-white">
+        <section className="hero-panel p-5 sm:p-7 text-white">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="data-kicker text-cyan-200">Realtime signal center</p>
-              <h1 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight text-white sm:text-4xl">
+              <h1 className="mt-3 max-w-2xl text-2xl font-semibold leading-tight text-white sm:text-4xl">
                 Stay on top of project movement, replies, and team decisions.
               </h1>
               <p className="mt-3 max-w-2xl text-sm text-slate-300">
                 Your inbox now behaves like a proper ops feed: unread counters, quick triage, and action-ready updates.
               </p>
             </div>
-            <div className="grid min-w-[220px] gap-3 rounded-[28px] border border-white/10 bg-white/10 p-4 backdrop-blur-md">
+            <div className="grid w-full gap-3 rounded-[28px] border border-white/10 bg-white/10 p-4 backdrop-blur-md sm:w-auto">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-slate-300">Unread</p>
                 <p className="mt-2 text-3xl font-semibold text-white">{unreadCount}</p>
@@ -143,7 +143,7 @@ export default function NotificationsPage() {
               Jump to project board
             </Link>
           </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="insight-card">
               <div className="relative z-[1]">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">

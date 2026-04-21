@@ -69,9 +69,9 @@ export default function StudentDetailPage() {
           </Link>
 
           <div className="grid gap-6 xl:grid-cols-[1.12fr,0.88fr]">
-            <section className="hero-panel p-7 text-white">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="flex items-center gap-5">
+            <section className="hero-panel p-5 sm:p-7 text-white">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5">
                   {student.photoURL ? (
                     <img
                       src={student.photoURL}
@@ -85,7 +85,7 @@ export default function StudentDetailPage() {
                   )}
                   <div>
                     <p className="data-kicker text-cyan-200">Student profile</p>
-                    <h1 className="mt-3 text-3xl font-semibold leading-tight text-white sm:text-5xl">
+                    <h1 className="mt-3 text-2xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
                       {student.name}
                     </h1>
                     <p className="mt-3 text-sm text-slate-300">
@@ -99,7 +99,7 @@ export default function StudentDetailPage() {
                     student.available
                       ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200'
                       : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
-                  }`}
+                  } self-start sm:self-auto`}
                 >
                   {student.available ? 'Available now' : 'Currently busy'}
                 </span>
@@ -120,7 +120,7 @@ export default function StudentDetailPage() {
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <Link
                   href={`/messages?to=${student.id}&name=${encodeURIComponent(student.name)}`}
-                  className="btn-primary"
+                  className="btn-primary w-full sm:w-auto"
                 >
                   <MessageSquareText size={16} />
                   Message {student.name.split(' ')[0]}
@@ -223,13 +223,13 @@ export default function StudentDetailPage() {
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href={`/messages?to=${student.id}&name=${encodeURIComponent(student.name)}`}
-                  className="btn-primary"
+                  className="btn-primary w-full sm:w-auto"
                 >
                   Open conversation
                 </Link>
                 <Link
                   href="/projects"
-                  className="rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-brand-300 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-100"
+                  className="w-full rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-2.5 text-center text-sm font-semibold text-slate-800 transition hover:border-brand-300 hover:text-brand-600 sm:w-auto dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-100"
                 >
                   View live projects
                 </Link>

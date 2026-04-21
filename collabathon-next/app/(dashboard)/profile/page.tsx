@@ -254,7 +254,7 @@ export default function ProfilePage() {
 
   return (
     <AppShell>
-      <section className="mesh-panel p-7 text-white">
+      <section className="mesh-panel p-5 sm:p-7 text-white">
         <div className="relative z-[1] grid gap-6 xl:grid-cols-[1fr,0.82fr]">
           <div className="max-w-3xl">
             <p className="data-kicker text-cyan-200">
@@ -264,7 +264,7 @@ export default function ProfilePage() {
                   ? 'Admin identity'
                   : 'Talent identity'}
             </p>
-            <h1 className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-5xl">
+            <h1 className="mt-4 text-2xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
               {role === 'client'
                 ? 'Shape the client presence students trust before they apply.'
                 : role === 'admin'
@@ -279,7 +279,7 @@ export default function ProfilePage() {
                   : 'Profiles drive teammate recommendations, application confidence, and stronger client trust.'}
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1">
             {[
               {
                 label: 'Role',

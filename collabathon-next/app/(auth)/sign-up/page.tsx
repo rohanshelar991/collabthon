@@ -1,5 +1,13 @@
 import Link from 'next/link';
-import { ArrowRight, Briefcase, GraduationCap, Sparkles, Wand2 } from 'lucide-react';
+import {
+  ArrowRight,
+  Briefcase,
+  GraduationCap,
+  ShieldCheck,
+  Sparkles,
+  Wand2,
+  Workflow
+} from 'lucide-react';
 
 const entries = [
   {
@@ -45,15 +53,54 @@ const onboardingConsole = [
   'Admin creation stays internal so governance remains protected from public onboarding.'
 ] as const;
 
+const onboardingSignals = [
+  {
+    label: 'Profile seeding',
+    value: 'Live',
+    detail: 'Student and client onboarding creates role-shaped records instead of generic placeholder accounts.'
+  },
+  {
+    label: 'Trust posture',
+    value: 'Protected',
+    detail: 'Admin creation stays off the public surface so moderation access is never mixed into general signup.'
+  },
+  {
+    label: 'Launch quality',
+    value: 'Structured',
+    detail: 'Each role gets a cleaner runway into dashboards, projects, messaging, and workspace tools.'
+  }
+] as const;
+
+const onboardingDeck = [
+  {
+    href: '/student/signup',
+    title: 'Student setup',
+    detail: 'Seed a discoverable profile with skills, experience, availability, and collaboration signal.',
+    icon: GraduationCap
+  },
+  {
+    href: '/client/signup',
+    title: 'Client setup',
+    detail: 'Create the company lane that can publish work, review applicants, and launch teams.',
+    icon: Workflow
+  },
+  {
+    href: '/sign-in',
+    title: 'Return to login',
+    detail: 'Already created an account? Jump back into the correct role portal with one click.',
+    icon: ShieldCheck
+  }
+] as const;
+
 export default function SignUpPage() {
   return (
-    <div className="grid min-h-screen place-items-center px-6 py-12">
+    <div className="premium-stage grid min-h-screen place-items-center px-4 py-8 sm:px-6 sm:py-12">
       <div className="w-full max-w-6xl space-y-8">
-        <section className="hero-panel p-7 text-white">
+        <section className="hero-panel p-5 sm:p-7 text-white">
           <div className="grid gap-8 lg:grid-cols-[1.08fr,0.92fr]">
             <div>
               <p className="data-kicker text-cyan-200">Collabathon onboarding</p>
-              <h1 className="mt-4 text-4xl font-semibold leading-tight text-white sm:text-6xl">
+              <h1 className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
                 Open the right account and step into a much more intentional workflow.
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
@@ -83,6 +130,24 @@ export default function SignUpPage() {
               ))}
             </div>
           </div>
+        </section>
+
+        <section className="ops-ticker sm:grid-cols-2 xl:grid-cols-3">
+          {onboardingSignals.map((item) => (
+            <div key={item.label} className="ops-ticker-item">
+              <div className="relative z-[1]">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                  {item.label}
+                </p>
+                <p className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">
+                  {item.value}
+                </p>
+                <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  {item.detail}
+                </p>
+              </div>
+            </div>
+          ))}
         </section>
 
         <div className="grid gap-5 lg:grid-cols-[1.2fr,0.8fr]">
@@ -138,7 +203,7 @@ export default function SignUpPage() {
               </div>
               <span className="glass-chip">Firestore-backed setup</span>
             </div>
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {launchCards.map((card) => (
                 <div key={card.title} className="insight-card">
                   <div className="relative z-[1]">
@@ -155,6 +220,30 @@ export default function SignUpPage() {
           </div>
         </section>
 
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {onboardingDeck.map(({ href, title, detail, icon: Icon }) => (
+            <Link key={href} href={href} className="control-pod group">
+              <div className="relative z-[1]">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="control-pill">Onboarding route</span>
+                  <div className="stat-orb h-11 w-11 rounded-[18px]">
+                    <Icon size={18} />
+                  </div>
+                </div>
+                <h3 className="mt-5 text-xl font-semibold text-slate-900 dark:text-white">
+                  {title}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  {detail}
+                </p>
+                <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand-600 dark:text-cyan-300">
+                  Open route <ArrowRight size={16} className="transition group-hover:translate-x-1" />
+                </div>
+              </div>
+            </Link>
+          ))}
+        </section>
+
         <section className="premium-terminal p-6 text-white">
           <div className="relative z-[1]">
             <div className="flex items-center gap-2">
@@ -165,7 +254,7 @@ export default function SignUpPage() {
                 Onboarding console
               </span>
             </div>
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {onboardingConsole.map((line) => (
                 <div key={line} className="signal-console">
                   <p className="text-sm leading-7 text-slate-200">{line}</p>

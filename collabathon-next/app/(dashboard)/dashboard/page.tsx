@@ -225,11 +225,11 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <div className="grid gap-6 xl:grid-cols-[1.2fr,0.8fr]">
-        <section className="hero-panel p-7 text-white">
+        <section className="hero-panel p-5 sm:p-7 text-white">
           <div className="grid gap-6 lg:grid-cols-[1.06fr,0.94fr]">
             <div>
               <p className="data-kicker text-cyan-200">{heroCopy.kicker}</p>
-              <h1 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight text-white sm:text-5xl">
+              <h1 className="mt-4 max-w-3xl text-2xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
                 {heroCopy.title}
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">{heroCopy.body}</p>
@@ -260,7 +260,7 @@ export default function DashboardPage() {
             <div className="grid gap-3">
               <div className="hero-metric-card">
                 <p className="text-xs uppercase tracking-[0.22em] text-slate-300">Mission stack</p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
                   <div className="rounded-[22px] border border-white/10 bg-white/5 p-4">
                     <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Priority queue</p>
                     <p className="mt-2 text-2xl font-semibold text-white">
@@ -316,7 +316,7 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statCards.map((card) => {
           const Icon = card.icon;
           return (

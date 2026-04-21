@@ -121,6 +121,27 @@ export default function AdminPage() {
     [students]
   );
 
+  const governanceSignals = useMemo(
+    () => [
+      {
+        label: 'Risk index',
+        value: `${Math.round(((statusBreakdown.flagged + statusBreakdown.hidden) / Math.max(projects.length, 1)) * 100)}%`,
+        detail: 'Share of briefs currently needing intervention, visibility changes, or extra review.'
+      },
+      {
+        label: 'Review load',
+        value: `${users.filter((user) => (user.accountStatus || 'active') === 'review').length}`,
+        detail: 'Accounts currently paused in review before the marketplace grants full operating access.'
+      },
+      {
+        label: 'Supply motion',
+        value: `${availabilityBreakdown.available}/${students.length || 0}`,
+        detail: 'Students currently marked available versus the full talent pool in the system.'
+      }
+    ],
+    [availabilityBreakdown.available, projects.length, statusBreakdown.flagged, statusBreakdown.hidden, students.length, users]
+  );
+
   async function moderateUser(userId: string, accountStatus: UserRecord['accountStatus']) {
     if (!actorId || !accountStatus) return;
     setWorkingKey(`user:${userId}`);
@@ -154,18 +175,18 @@ export default function AdminPage() {
 
   return (
     <AppShell>
-      <section className="mesh-panel p-7 text-white">
+      <section className="mesh-panel p-5 sm:p-7 text-white">
         <div className="relative z-[1] flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-3xl">
             <p className="data-kicker text-cyan-200">Admin mission control</p>
-            <h1 className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-5xl">
+            <h1 className="mt-4 text-2xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
               Moderate supply, demand, trust, and platform execution from one live control room.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
               This surface now includes moderation actions, audit history, and delivery health so the platform can be operated like an actual product, not just observed.
             </p>
           </div>
-          <div className="grid min-w-[260px] gap-3 sm:grid-cols-3 sm:min-w-[520px] xl:min-w-[420px] xl:grid-cols-1">
+          <div className="grid w-full gap-3 sm:min-w-[320px] sm:grid-cols-2 lg:min-w-[520px] lg:grid-cols-3 xl:min-w-[420px] xl:grid-cols-1">
             {[
               { label: 'Users', value: users.length, icon: UsersRound },
               { label: 'Projects', value: projects.length, icon: BriefcaseBusiness },
@@ -195,7 +216,7 @@ export default function AdminPage() {
       ) : (
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.08fr,0.92fr]">
           <section className="grid gap-6">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <div className="insight-card">
                 <div className="relative z-[1]">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
@@ -233,6 +254,27 @@ export default function AdminPage() {
                   <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
                     Logged moderation and automation events in view.
                   </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="premium-terminal p-6 text-white">
+              <div className="relative z-[1]">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-cyan-200">Governance feed</p>
+                    <h2 className="mt-2 text-2xl font-semibold text-white">Live trust and moderation pulse</h2>
+                  </div>
+                  <span className="glass-chip border-white/10 bg-white/10 text-white">Ops-grade signal stack</span>
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                  {governanceSignals.map((item) => (
+                    <div key={item.label} className="signal-console">
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-cyan-200">{item.label}</p>
+                      <p className="mt-3 text-3xl font-semibold text-white">{item.value}</p>
+                      <p className="mt-2 text-sm leading-7 text-slate-200">{item.detail}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

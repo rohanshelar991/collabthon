@@ -51,6 +51,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const mobileNav = visibleNav.filter((item) =>
     ['Overview', 'Projects', 'Workspace', 'Messages', 'Billing'].includes(item.label)
   );
+  const workspacePulse = [
+    {
+      href: '/workspace' as Route,
+      label: 'Execution',
+      value: role === 'client' ? 'Pipeline live' : role === 'admin' ? 'System view' : 'Sprint ready',
+      detail:
+        role === 'client'
+          ? 'Track briefs, teams, and delivery status.'
+          : role === 'admin'
+            ? 'Watch workspace health across the platform.'
+            : 'Jump into active boards, tasks, and team momentum.'
+    },
+    {
+      href: '/messages' as Route,
+      label: 'Comms',
+      value: notificationCount > 0 ? `${notificationCount} waiting` : 'Synced',
+      detail: 'Conversations, alerts, and follow-ups stay connected in one lane.'
+    },
+    {
+      href: '/billing' as Route,
+      label: 'Growth',
+      value: role === 'admin' ? 'Controls' : 'Plans live',
+      detail:
+        role === 'admin'
+          ? 'Review monetization surfaces and subscription posture.'
+          : 'Manage plans, checkout, and the platform growth stack.'
+    }
+  ];
 
   useEffect(() => {
     return onAuthStateChanged(auth, async (u) => {
@@ -112,7 +140,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="page-shell flex min-h-screen">
-      <aside className="hidden w-72 shrink-0 border-r border-white/30 bg-slate-950/90 p-6 text-white shadow-[20px_0_60px_rgba(2,6,23,0.32)] backdrop-blur-xl dark:border-slate-800/80 md:flex md:flex-col">
+      <aside className="hidden w-64 shrink-0 border-r border-white/30 bg-slate-950/90 p-5 text-white shadow-[20px_0_60px_rgba(2,6,23,0.32)] backdrop-blur-xl dark:border-slate-800/80 md:flex md:flex-col lg:w-72 lg:p-6">
         <div className="rounded-[30px] border border-white/10 bg-white/5 p-4 shadow-[0_25px_60px_rgba(2,6,23,0.32)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 text-lg font-bold text-white">
@@ -234,9 +262,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         </div>
       </aside>
-      <main className="flex-1 p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8 lg:pb-8">
-        <header className="section-grid dashboard-shell mb-8 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+      <main className="flex-1 p-3 pb-28 sm:p-6 sm:pb-28 lg:p-8 lg:pb-8">
+        <header className="section-grid dashboard-shell mb-8 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="flex w-full items-center gap-3 sm:w-auto">
             <Link href="/notifications" className="rounded-2xl border border-white/50 bg-white/70 p-3 shadow-[0_16px_36px_rgba(15,23,42,0.12)] dark:border-slate-800 dark:bg-slate-900/80">
               <div className="relative text-brand-500">
                 <Bell size={18} />
@@ -249,7 +277,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </Link>
             <div>
               <p className="data-kicker">Welcome back</p>
-              <p className="text-xl font-semibold text-slate-900 dark:text-white">{user?.email ?? 'Guest'}</p>
+              <p className="break-all text-base font-semibold text-slate-900 dark:text-white sm:text-xl">{user?.email ?? 'Guest'}</p>
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 {role ? <span className="glass-chip">{role.toUpperCase()}</span> : null}
                 <span className="text-sm text-slate-500 dark:text-slate-400">
@@ -258,7 +286,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">
             <div className="hidden gap-3 lg:flex">
               <div className="header-status-card">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Alerts</p>
@@ -272,6 +300,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <ThemeToggleButton />
           </div>
         </header>
+        <section className="mb-8 hidden gap-3 lg:grid lg:grid-cols-3">
+          {workspacePulse.map((item) => (
+            <Link key={item.label} href={item.href} className="ops-ticker-item group">
+              <div className="relative z-[1]">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                  {item.label}
+                </p>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <p className="text-xl font-semibold text-slate-900 dark:text-white">{item.value}</p>
+                  <span className="control-pill">Open</span>
+                </div>
+                <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  {item.detail}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </section>
         <div className="section-grid">{children}</div>
       </main>
       <nav className="dock-shell">

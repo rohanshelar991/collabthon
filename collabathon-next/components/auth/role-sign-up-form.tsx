@@ -133,17 +133,17 @@ export function RoleSignUpForm({ role }: { role: Exclude<UserRole, 'admin'> }) {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center px-6 py-12">
+    <div className="grid min-h-screen place-items-center px-4 py-8 sm:px-6 sm:py-12">
       <div className="auth-stage w-full max-w-6xl p-4 md:p-6">
         <div className="relative z-[1] grid gap-6 lg:grid-cols-[0.94fr,1.06fr]">
-          <section className="hero-panel flex flex-col justify-between p-7 text-white">
+          <section className="hero-panel flex flex-col justify-between p-5 text-white sm:p-7">
             <div>
               <div
                 className={`inline-flex rounded-full bg-gradient-to-r ${roleAccent[role]} px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.3em] text-white shadow-[0_18px_35px_rgba(14,165,233,0.22)]`}
               >
                 {readableRole(role)}
               </div>
-              <h1 className="mt-5 text-4xl font-semibold leading-tight text-white sm:text-5xl">
+              <h1 className="mt-5 text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
                 {title}
               </h1>
               <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">{roleMeta.body}</p>
@@ -193,11 +193,11 @@ export function RoleSignUpForm({ role }: { role: Exclude<UserRole, 'admin'> }) {
             </div>
           </section>
 
-          <section className="command-surface p-6 md:p-8">
+          <section className="command-surface p-5 sm:p-6 md:p-8">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="data-kicker">Create access</p>
-                <h2 className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">
+                <h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white sm:text-3xl">
                   Set up your workspace identity
                 </h2>
               </div>
@@ -205,7 +205,7 @@ export function RoleSignUpForm({ role }: { role: Exclude<UserRole, 'admin'> }) {
                 <Wand2 size={18} />
               </div>
             </div>
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <div className="insight-card">
                 <div className="relative z-[1]">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Account</p>

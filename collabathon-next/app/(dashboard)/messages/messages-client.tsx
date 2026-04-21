@@ -148,11 +148,11 @@ export function MessagesClient({
 
   return (
     <AppShell>
-      <section className="mesh-panel p-7 text-white">
+      <section className="mesh-panel p-5 sm:p-7 text-white">
         <div className="relative z-[1] flex flex-wrap items-start justify-between gap-6">
           <div className="max-w-3xl">
             <p className="data-kicker text-cyan-200">Realtime comms lane</p>
-            <h1 className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-5xl">
+            <h1 className="mt-4 text-2xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
               Keep collaboration warm, fast, and impossible to lose in the noise.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-300">
@@ -160,7 +160,7 @@ export function MessagesClient({
               coordination with cleaner context around every conversation.
             </p>
           </div>
-          <div className="grid min-w-[260px] gap-3 sm:grid-cols-3 sm:min-w-[520px] xl:min-w-[420px] xl:grid-cols-1">
+          <div className="grid w-full gap-3 sm:min-w-[320px] sm:grid-cols-2 lg:min-w-[520px] lg:grid-cols-3 xl:min-w-[420px] xl:grid-cols-1">
             {[
               { label: 'Known contacts', value: contactList.length, icon: UserRoundSearch },
               { label: 'Live threads', value: threadCount, icon: MessageSquareText },
@@ -259,8 +259,8 @@ export function MessagesClient({
         </section>
 
         <section className="aura-card p-5">
-          <div className="relative z-[1] flex min-h-[680px] flex-col">
-            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200/80 pb-5 dark:border-slate-800">
+          <div className="relative z-[1] flex min-h-[560px] flex-col lg:min-h-[680px]">
+            <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-5 sm:flex-row sm:items-start sm:justify-between dark:border-slate-800">
               <div className="flex items-center gap-4">
                 <div className="profile-orbit flex h-16 w-16 items-center justify-center rounded-[24px] bg-slate-950 text-lg font-semibold text-white dark:bg-slate-100 dark:text-slate-950">
                   {activeContact ? initialsFor(activeContact.name) : '??'}
@@ -284,7 +284,7 @@ export function MessagesClient({
               </div>
             </div>
 
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               <div className="insight-card">
                 <div className="relative z-[1]">
                   <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">
@@ -411,7 +411,7 @@ export function MessagesClient({
                 <button
                   onClick={() => void handleSendMessage()}
                   disabled={!toId || !text.trim() || sending}
-                  className="btn-primary"
+                  className="btn-primary w-full sm:w-auto"
                 >
                   <SendHorizontal size={16} />
                   {sending ? 'Sending...' : 'Send message'}

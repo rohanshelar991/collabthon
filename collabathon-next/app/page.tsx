@@ -95,12 +95,56 @@ const operatingLayers = [
   }
 ] as const;
 
+const signalTicker = [
+  {
+    label: 'Control posture',
+    value: 'Audit-ready',
+    detail: 'Role-aware auth, admin isolation, and activity logs keep the platform governable.'
+  },
+  {
+    label: 'Execution mode',
+    value: 'Realtime',
+    detail: 'Projects, conversations, workspaces, and notifications stay synced without context loss.'
+  },
+  {
+    label: 'Monetization',
+    value: 'Stripe-wired',
+    detail: 'Billing surfaces, subscription flows, and webhook scaffolding are already part of the stack.'
+  },
+  {
+    label: 'Delivery feel',
+    value: 'Premium',
+    detail: 'The UI behaves like a polished command center rather than a generic hackathon directory.'
+  }
+] as const;
+
+const entryLanes = [
+  {
+    href: '/student/login',
+    title: 'Enter the student lane',
+    detail: 'Open teammate discovery, applications, recommendations, and execution boards.',
+    icon: UsersRound
+  },
+  {
+    href: '/client/login',
+    title: 'Enter the client lane',
+    detail: 'Publish briefs, manage applicant pipelines, and staff delivery teams quickly.',
+    icon: Workflow
+  },
+  {
+    href: '/admin-login',
+    title: 'Enter the admin lane',
+    detail: 'Operate moderation, audit visibility, and platform trust from the protected control room.',
+    icon: ShieldCheck
+  }
+] as const;
+
 export default function Home() {
   return (
-    <div className="min-h-screen px-6 py-10 sm:py-14">
+    <div className="premium-stage min-h-screen px-4 py-8 sm:px-6 sm:py-14">
       <div className="mx-auto max-w-7xl space-y-8">
         <section className="grid gap-6 xl:grid-cols-[1.08fr,0.92fr]">
-          <div className="mesh-panel p-7 text-white sm:p-9">
+          <div className="mesh-panel p-5 text-white sm:p-9">
             <div className="relative z-[1] max-w-3xl">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="glass-chip border-white/10 bg-white/10 text-white">
@@ -113,7 +157,7 @@ export default function Home() {
                 </span>
               </div>
 
-              <h1 className="mt-6 max-w-4xl text-5xl font-semibold leading-[0.96] text-white sm:text-6xl xl:text-7xl">
+              <h1 className="mt-6 max-w-4xl text-4xl font-semibold leading-[1.02] text-white sm:text-5xl lg:text-6xl xl:text-7xl">
                 A sharper operating system for student teams, client briefs, and ambitious builds.
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
@@ -254,6 +298,24 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="ops-ticker sm:grid-cols-2 xl:grid-cols-4">
+          {signalTicker.map((item) => (
+            <div key={item.label} className="ops-ticker-item">
+              <div className="relative z-[1]">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
+                  {item.label}
+                </p>
+                <p className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">
+                  {item.value}
+                </p>
+                <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  {item.detail}
+                </p>
+              </div>
+            </div>
+          ))}
+        </section>
+
         <section className="grid gap-6 xl:grid-cols-[0.9fr,1.1fr]">
           <div className="spotlight-card p-7">
             <div className="relative z-[1]">
@@ -311,7 +373,7 @@ export default function Home() {
               </div>
               <span className="glass-chip">Industry-grade lanes</span>
             </div>
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {operatingLayers.map((layer) => (
                 <div key={layer.title} className="insight-card">
                   <div className="relative z-[1]">
@@ -328,7 +390,31 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="hero-panel p-7 text-white sm:p-8">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {entryLanes.map(({ href, title, detail, icon: Icon }) => (
+            <Link key={href} href={href} className="control-pod group">
+              <div className="relative z-[1]">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="control-pill">Role launch pad</span>
+                  <div className="stat-orb h-11 w-11 rounded-[18px]">
+                    <Icon size={18} />
+                  </div>
+                </div>
+                <h3 className="mt-5 text-2xl font-semibold text-slate-900 dark:text-white">
+                  {title}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                  {detail}
+                </p>
+                <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-brand-600 dark:text-cyan-300">
+                  Open lane <ArrowRight size={16} className="transition group-hover:translate-x-1" />
+                </div>
+              </div>
+            </Link>
+          ))}
+        </section>
+
+        <section className="hero-panel p-5 text-white sm:p-8">
           <div className="relative z-[1] flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl">
               <p className="data-kicker text-cyan-200">Ready to enter the workspace?</p>
