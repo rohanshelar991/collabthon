@@ -20,6 +20,7 @@ import {
   Message,
   Notification,
   Project,
+  ProjectAttachment,
   ProjectComment,
   Review,
   SearchSubscription,
@@ -58,6 +59,11 @@ type SearchSubscriptionInput = Omit<
 type ProjectCommentInput = Omit<
   ProjectComment,
   'id' | 'projectId' | 'userId' | 'authorName' | 'authorRole' | 'createdAt' | 'updatedAt'
+>;
+
+type ProjectAttachmentInput = Omit<
+  ProjectAttachment,
+  'id' | 'projectId' | 'userId' | 'uploaderName' | 'uploaderRole' | 'createdAt' | 'updatedAt'
 >;
 
 type TeamFilters = {
@@ -957,6 +963,134 @@ export async function addProjectComment(projectId: string, userId: string, input
   ]);
 
   return ref.id;
+}
+
+export async function deleteProjectComment(commentId: string, actorId?: string) {
+  const ref = doc(db, 'projectComments', commentId);
+  const snap = await withFirestoreTimeout(getDoc(ref), 'Loading project comment');
+  if (!snap.exists()) return null;
+
+  const comment = { id: snap.id, ...(snap.data() as Omit<ProjectComment, 'id'>) };
+  const project = await getProjectById(comment.projectId);
+  await withFirestoreTimeout(deleteDoc(ref), 'Removing project comment');
+
+  await Promise.allSettled([
+    createAuditLog({
+      actorId,
+      targetType: 'project',
+      targetId: comment.projectId,
+      action: 'comment.deleted',
+      summary: `A comment on ${project?.title || 'a project'} was removed.`,
+      metadata: { commentId, removedAuthor: comment.authorName }
+    }),
+    createProjectActivity(comment.projectId, {
+      actorId,
+      targetType: 'project',
+      targetId: comment.projectId,
+      action: 'comment.deleted',
+      summary: `A comment on ${project?.title || 'a project'} was removed.`,
+      metadata: { commentId, removedAuthor: comment.authorName }
+    })
+  ]);
+
+  return comment;
+}
+
+export async function listRecentProjectComments(limit = 24) {
+  const snap = await withFirestoreTimeout(getDocs(collection(db, 'projectComments')), 'Loading recent project comments');
+  return byNewest(
+    snap.docs.map((commentDoc) => ({
+      id: commentDoc.id,
+      ...(commentDoc.data() as Omit<ProjectComment, 'id'>)
+    }))
+  ).slice(0, limit);
+}
+
+export async function listProjectAttachments(projectId: string) {
+  const attachmentQuery = query(collection(db, 'projectAttachments'), where('projectId', '==', projectId));
+  const snap = await withFirestoreTimeout(getDocs(attachmentQuery), 'Loading project attachments');
+  return byNewest(
+    snap.docs.map((attachmentDoc) => ({
+      id: attachmentDoc.id,
+      ...(attachmentDoc.data() as Omit<ProjectAttachment, 'id'>)
+    }))
+  );
+}
+
+export async function addProjectAttachment(
+  projectId: string,
+  userId: string,
+  input: ProjectAttachmentInput
+) {
+  const [uploader, project] = await Promise.all([getUserRecord(userId), getProjectById(projectId)]);
+  const ref = await withFirestoreTimeout(
+    addDoc(collection(db, 'projectAttachments'), {
+      projectId,
+      userId,
+      uploaderName: uploader?.displayName || uploader?.email || 'Collabathon user',
+      uploaderRole: uploader?.role,
+      fileName: input.fileName,
+      fileType: input.fileType || '',
+      sizeBytes: input.sizeBytes || 0,
+      downloadURL: input.downloadURL,
+      storagePath: input.storagePath,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    } satisfies Partial<ProjectAttachment>),
+    'Saving project attachment'
+  );
+
+  await Promise.allSettled([
+    createAuditLog({
+      actorId: userId,
+      targetType: 'project',
+      targetId: projectId,
+      action: 'attachment.added',
+      summary: `${input.fileName} was attached to ${project?.title || 'a project'}.`,
+      metadata: { attachmentId: ref.id, storagePath: input.storagePath }
+    }),
+    createProjectActivity(projectId, {
+      actorId: userId,
+      targetType: 'project',
+      targetId: projectId,
+      action: 'attachment.added',
+      summary: `${input.fileName} was attached to ${project?.title || 'a project'}.`,
+      metadata: { attachmentId: ref.id, storagePath: input.storagePath }
+    })
+  ]);
+
+  return ref.id;
+}
+
+export async function deleteProjectAttachment(attachmentId: string, actorId?: string) {
+  const ref = doc(db, 'projectAttachments', attachmentId);
+  const snap = await withFirestoreTimeout(getDoc(ref), 'Loading project attachment');
+  if (!snap.exists()) return null;
+
+  const attachment = { id: snap.id, ...(snap.data() as Omit<ProjectAttachment, 'id'>) };
+  const project = await getProjectById(attachment.projectId);
+  await withFirestoreTimeout(deleteDoc(ref), 'Removing project attachment');
+
+  await Promise.allSettled([
+    createAuditLog({
+      actorId,
+      targetType: 'project',
+      targetId: attachment.projectId,
+      action: 'attachment.deleted',
+      summary: `${attachment.fileName} was removed from ${project?.title || 'a project'}.`,
+      metadata: { attachmentId, storagePath: attachment.storagePath }
+    }),
+    createProjectActivity(attachment.projectId, {
+      actorId,
+      targetType: 'project',
+      targetId: attachment.projectId,
+      action: 'attachment.deleted',
+      summary: `${attachment.fileName} was removed from ${project?.title || 'a project'}.`,
+      metadata: { attachmentId, storagePath: attachment.storagePath }
+    })
+  ]);
+
+  return attachment;
 }
 
 export async function listProjectActivity(projectId: string, limit = 18) {

@@ -30,6 +30,56 @@ async function notifyUser(userId, content, actorId, type = 'system', extra = {})
   });
 }
 
+function normalize(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function includesToken(values = [], token = '') {
+  const normalizedToken = normalize(token);
+  if (!normalizedToken) return true;
+  return values.some((value) => normalize(value).includes(normalizedToken));
+}
+
+function hasMeaningfulChange(before = {}, after = {}, fields = []) {
+  return fields.some((field) => JSON.stringify(before[field] ?? null) !== JSON.stringify(after[field] ?? null));
+}
+
+function matchesStudentSubscription(subscription, student) {
+  const filters = subscription.filters || {};
+  const skill = filters.skill || subscription.query || '';
+  const college = filters.college || '';
+  const experience = filters.experience || '';
+  const availableOnly = filters.availableOnly === true || filters.availableOnly === 'true';
+
+  return (
+    includesToken(student.skills || [], skill) &&
+    (!normalize(college) || normalize(student.college).includes(normalize(college))) &&
+    (!normalize(experience) || normalize(student.experienceLevel) === normalize(experience)) &&
+    (!availableOnly || Boolean(student.available))
+  );
+}
+
+function matchesProjectSubscription(subscription, project) {
+  const filters = subscription.filters || {};
+  const status = filters.status || '';
+  const queryText = filters.query || subscription.query || '';
+  const haystack = [project.title, project.description, ...(project.requiredSkills || [])].join(' ');
+
+  return (
+    project.moderationStatus !== 'hidden' &&
+    (!normalize(status) || normalize(status) === 'all' || normalize(project.status) === normalize(status)) &&
+    (!normalize(queryText) || normalize(haystack).includes(normalize(queryText)))
+  );
+}
+
+async function upsertSearchNotification(notificationId, payload) {
+  await db.collection('notifications').doc(notificationId).set({
+    ...payload,
+    read: false,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
+}
+
 // Set custom claims based on Firestore role doc on user creation
 exports.setUserRole = functions.auth.user().onCreate(async (user) => {
   const userDoc = await db.collection('users').doc(user.uid).get();
@@ -181,6 +231,129 @@ exports.syncSubscriptionNotifications = functions.firestore
       'stripe',
       'system'
     );
+
+    return null;
+  });
+
+exports.notifyStudentSearchSubscribers = functions.firestore
+  .document('students/{studentId}')
+  .onWrite(async (change, context) => {
+    if (!change.after.exists) return null;
+
+    const before = change.before.exists ? change.before.data() : null;
+    const after = change.after.data();
+    const studentId = context.params.studentId;
+
+    if (
+      before &&
+      !hasMeaningfulChange(before, after, ['name', 'college', 'experienceLevel', 'skills', 'available'])
+    ) {
+      return null;
+    }
+
+    const subscriptionsSnap = await db
+      .collection('searchSubscriptions')
+      .where('targetType', '==', 'student')
+      .get();
+
+    const matches = subscriptionsSnap.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .filter((subscription) => subscription.userId && subscription.userId !== studentId)
+      .filter((subscription) => matchesStudentSubscription(subscription, after));
+
+    if (!matches.length) return null;
+
+    await Promise.all(
+      matches.map((subscription) =>
+        upsertSearchNotification(`search_student_${subscription.id}_${studentId}`, {
+          userId: subscription.userId,
+          actorId: studentId,
+          type: 'system',
+          content: `${after.name || 'A student'} now matches your saved talent alert "${subscription.title || 'Talent alert'}".`,
+          targetId: studentId,
+          targetType: 'student',
+          href: `/students/${studentId}`,
+          searchSubscriptionId: subscription.id
+        })
+      )
+    );
+
+    await writeAuditLog({
+      actorId: 'automation',
+      actorDisplayName: 'Search Automation',
+      targetType: 'system',
+      targetId: studentId,
+      action: 'search_alert.student_match',
+      summary: `${after.name || 'A student'} matched ${matches.length} saved talent alert${matches.length === 1 ? '' : 's'}.`,
+      metadata: {
+        studentId,
+        matchCount: matches.length,
+        subscriptionIds: matches.map((subscription) => subscription.id)
+      }
+    });
+
+    return null;
+  });
+
+exports.notifyProjectSearchSubscribers = functions.firestore
+  .document('projects/{projectId}')
+  .onWrite(async (change, context) => {
+    if (!change.after.exists) return null;
+
+    const before = change.before.exists ? change.before.data() : null;
+    const after = change.after.data();
+    const projectId = context.params.projectId;
+
+    if (
+      before &&
+      !hasMeaningfulChange(before, after, ['title', 'description', 'requiredSkills', 'status', 'moderationStatus'])
+    ) {
+      return null;
+    }
+
+    if (after.moderationStatus === 'hidden') return null;
+
+    const subscriptionsSnap = await db
+      .collection('searchSubscriptions')
+      .where('targetType', '==', 'project')
+      .get();
+
+    const matches = subscriptionsSnap.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .filter((subscription) => subscription.userId && subscription.userId !== after.clientId)
+      .filter((subscription) => matchesProjectSubscription(subscription, after));
+
+    if (!matches.length) return null;
+
+    await Promise.all(
+      matches.map((subscription) =>
+        upsertSearchNotification(`search_project_${subscription.id}_${projectId}`, {
+          userId: subscription.userId,
+          actorId: after.clientId || 'system',
+          projectId,
+          type: 'system',
+          content: `${after.title || 'A project'} now matches your saved project alert "${subscription.title || 'Project alert'}".`,
+          targetId: projectId,
+          targetType: 'project',
+          href: `/projects/${projectId}`,
+          searchSubscriptionId: subscription.id
+        })
+      )
+    );
+
+    await writeAuditLog({
+      actorId: 'automation',
+      actorDisplayName: 'Search Automation',
+      targetType: 'system',
+      targetId: projectId,
+      action: 'search_alert.project_match',
+      summary: `${after.title || 'A project'} matched ${matches.length} saved project alert${matches.length === 1 ? '' : 's'}.`,
+      metadata: {
+        projectId,
+        matchCount: matches.length,
+        subscriptionIds: matches.map((subscription) => subscription.id)
+      }
+    });
 
     return null;
   });

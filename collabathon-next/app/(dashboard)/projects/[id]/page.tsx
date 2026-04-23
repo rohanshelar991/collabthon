@@ -3,17 +3,20 @@
 import Link from 'next/link';
 import { type Route } from 'next';
 import { useParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { type ChangeEvent, useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
   ArrowLeft,
   Bookmark,
   BookmarkCheck,
   CalendarClock,
+  Download,
+  FileUp,
   FolderKanban,
   MessageSquareText,
   Radar,
   Sparkles,
+  Trash2,
   UsersRound,
   Wallet
 } from 'lucide-react';
@@ -23,12 +26,16 @@ import { pushToast } from '@/components/ui/toaster';
 import { auth } from '@/lib/firebase';
 import {
   addProjectComment,
+  addProjectAttachment,
   acceptApplication,
+  deleteProjectAttachment,
+  deleteProjectComment,
   getClientProfile,
   getProjectById,
   getTeamById,
   getUserRecord,
   listApplications,
+  listProjectAttachments,
   listProjectActivity,
   listProjectComments,
   listWatchlistItems,
@@ -36,8 +43,18 @@ import {
   toggleWatchlistItem,
   updateProjectStatus
 } from '@/lib/firestore';
+import { deleteStorageFile, uploadProjectAttachment } from '@/lib/storage';
 import type { UserRole } from '@/lib/roles';
-import type { Application, AuditLog, ClientProfile, Project, ProjectComment, Team, UserRecord } from '@/types';
+import type {
+  Application,
+  AuditLog,
+  ClientProfile,
+  Project,
+  ProjectAttachment,
+  ProjectComment,
+  Team,
+  UserRecord
+} from '@/types';
 
 function statusTone(status: Project['status']) {
   switch (status) {
@@ -50,6 +67,13 @@ function statusTone(status: Project['status']) {
   }
 }
 
+function formatBytes(sizeBytes?: number) {
+  if (!sizeBytes) return 'Unknown size';
+  if (sizeBytes < 1024) return `${sizeBytes} B`;
+  if (sizeBytes < 1024 * 1024) return `${(sizeBytes / 1024).toFixed(1)} KB`;
+  return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 export default function ProjectDetailPage() {
   const params = useParams<{ id: string }>();
   const [userId, setUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
@@ -58,6 +82,7 @@ export default function ProjectDetailPage() {
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
   const [clientRecord, setClientRecord] = useState<UserRecord | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [attachments, setAttachments] = useState<ProjectAttachment[]>([]);
   const [comments, setComments] = useState<ProjectComment[]>([]);
   const [activity, setActivity] = useState<AuditLog[]>([]);
   const [myApplication, setMyApplication] = useState<Application | null>(null);
@@ -66,6 +91,7 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
   const [workingId, setWorkingId] = useState<string | null>(null);
   const [commentDraft, setCommentDraft] = useState('');
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
 
   useEffect(() => onAuthStateChanged(auth, (user) => setUserId(user?.uid ?? null)), []);
 
@@ -89,6 +115,7 @@ export default function ProjectDetailPage() {
         setClientProfile(null);
         setClientRecord(null);
         setApplications([]);
+        setAttachments([]);
         setComments([]);
         setActivity([]);
         setMyApplication(null);
@@ -107,6 +134,7 @@ export default function ProjectDetailPage() {
         savedItems,
         projectApplications,
         myApplications,
+        projectAttachments,
         projectComments,
         projectActivity
       ] =
@@ -119,6 +147,7 @@ export default function ProjectDetailPage() {
           activeUserId && !canSeeApplicantLane
             ? listApplications({ studentId: activeUserId })
             : Promise.resolve([]),
+          listProjectAttachments(loadedProject.id),
           listProjectComments(loadedProject.id),
           listProjectActivity(loadedProject.id)
         ]);
@@ -128,6 +157,7 @@ export default function ProjectDetailPage() {
       setTeam(teamRecord);
       setSaved(savedItems.some((item) => item.targetId === loadedProject.id));
       setApplications(projectApplications);
+      setAttachments(projectAttachments);
       setComments(projectComments);
       setActivity(projectActivity);
       setMyApplication(myApplications.find((application) => application.projectId === loadedProject.id) || null);
@@ -151,6 +181,8 @@ export default function ProjectDetailPage() {
       { label: 'Deadline', value: project.deadline || 'Open ended', icon: CalendarClock }
     ];
   }, [applications.length, project]);
+
+  const canModerateContent = role === 'admin';
 
   async function handleToggleSaved() {
     if (!project) return;
@@ -200,6 +232,67 @@ export default function ProjectDetailPage() {
       pushToast('Comment posted to the project feed.');
     } catch (error: any) {
       pushToast(error?.message || 'Unable to post comment.');
+    } finally {
+      setWorkingId(null);
+    }
+  }
+
+  async function handleAttachmentUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file || !project || !userId) {
+      if (!userId) pushToast('Sign in to attach files to this brief.');
+      return;
+    }
+
+    setUploadingAttachment(true);
+    try {
+      const uploaded = await uploadProjectAttachment(file, project.id, userId);
+      await addProjectAttachment(project.id, userId, uploaded);
+      await loadPage();
+      pushToast('Attachment uploaded to the project brief.');
+    } catch (error: any) {
+      pushToast(error?.message || 'Unable to upload attachment.');
+    } finally {
+      setUploadingAttachment(false);
+    }
+  }
+
+  async function handleDeleteAttachment(attachment: ProjectAttachment) {
+    if (!userId) {
+      pushToast('Sign in first.');
+      return;
+    }
+
+    setWorkingId(`attachment:${attachment.id}`);
+    try {
+      await Promise.allSettled([
+        deleteStorageFile(attachment.storagePath),
+        deleteProjectAttachment(attachment.id, userId)
+      ]);
+      await loadPage();
+      pushToast('Attachment removed.');
+    } catch (error: any) {
+      pushToast(error?.message || 'Unable to remove attachment.');
+    } finally {
+      setWorkingId(null);
+    }
+  }
+
+  async function handleDeleteComment(comment: ProjectComment) {
+    if (!userId) {
+      pushToast('Sign in first.');
+      return;
+    }
+
+    setWorkingId(`comment-delete:${comment.id}`);
+    try {
+      await deleteProjectComment(comment.id, userId);
+      await loadPage();
+      pushToast('Comment removed.');
+    } catch (error: any) {
+      pushToast(error?.message || 'Unable to remove comment.');
     } finally {
       setWorkingId(null);
     }
@@ -569,6 +662,86 @@ export default function ProjectDetailPage() {
                 </div>
 
                 <div className="mt-5 grid gap-3">
+                  <div className="rail-card p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                          Attachment deck
+                        </p>
+                        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                          Keep contracts, briefs, decks, and delivery assets attached to the live brief.
+                        </p>
+                      </div>
+                      <label className="btn-primary cursor-pointer">
+                        <FileUp size={16} />
+                        {uploadingAttachment ? 'Uploading...' : 'Attach file'}
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={(event) => void handleAttachmentUpload(event)}
+                          disabled={uploadingAttachment}
+                        />
+                      </label>
+                    </div>
+
+                    <div className="mt-4 grid gap-3">
+                      {attachments.length ? (
+                        attachments.map((attachment) => {
+                          const canDeleteAttachment =
+                            canModerateContent || (userId != null && attachment.userId === userId);
+
+                          return (
+                            <div key={attachment.id} className="rail-card border-dashed p-4">
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="font-semibold text-slate-900 dark:text-white">
+                                      {attachment.fileName}
+                                    </p>
+                                    {attachment.uploaderRole ? (
+                                      <span className="badge capitalize">{attachment.uploaderRole}</span>
+                                    ) : null}
+                                  </div>
+                                  <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                                    {attachment.uploaderName} · {formatBytes(attachment.sizeBytes)}
+                                    {attachment.fileType ? ` · ${attachment.fileType}` : ''}
+                                  </p>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2">
+                                  <a
+                                    href={attachment.downloadURL}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-300 hover:text-brand-600 dark:border-slate-700 dark:text-slate-200"
+                                  >
+                                    <Download size={14} className="mr-2 inline-flex" />
+                                    Download
+                                  </a>
+                                  {canDeleteAttachment ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => void handleDeleteAttachment(attachment)}
+                                      disabled={workingId === `attachment:${attachment.id}`}
+                                      className="rounded-full border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                                    >
+                                      <Trash2 size={14} className="mr-2 inline-flex" />
+                                      {workingId === `attachment:${attachment.id}` ? 'Removing...' : 'Remove'}
+                                    </button>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="rail-card border-dashed p-4 text-sm text-slate-500 dark:text-slate-300">
+                          No files attached yet. Add the project brief, scope notes, or delivery assets here so the full team stays aligned.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {comments.length ? (
                     comments.map((comment) => (
                       <div key={comment.id} className="rail-card p-4">
@@ -583,6 +756,17 @@ export default function ProjectDetailPage() {
                               ) : null}
                             </div>
                           </div>
+                          {canModerateContent || (userId != null && comment.userId === userId) ? (
+                            <button
+                              type="button"
+                              onClick={() => void handleDeleteComment(comment)}
+                              disabled={workingId === `comment-delete:${comment.id}`}
+                              className="rounded-full border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                            >
+                              <Trash2 size={14} className="mr-2 inline-flex" />
+                              {workingId === `comment-delete:${comment.id}` ? 'Removing...' : 'Remove'}
+                            </button>
+                          ) : null}
                         </div>
                         <p className="mt-3 text-sm leading-7 text-slate-500 dark:text-slate-300">
                           {comment.text}

@@ -154,6 +154,16 @@ service cloud.firestore {
       );
     }
 
+    match /projectAttachments/{attachmentId} {
+      allow read: if canReadProject(resource.data.projectId);
+      allow create: if isActiveAccount() &&
+        request.resource.data.userId == request.auth.uid &&
+        canReadProject(request.resource.data.projectId);
+      allow update, delete: if hasRole('admin') || (
+        isActiveAccount() && resource.data.userId == request.auth.uid
+      );
+    }
+
     match /projectActivities/{activityId} {
       allow read: if canReadProject(resource.data.projectId);
       allow create: if isSignedIn() && (

@@ -1,31 +1,37 @@
 'use client';
 
+import Link from 'next/link';
+import { type Route } from 'next';
 import { useEffect, useMemo, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
   Activity,
   BriefcaseBusiness,
   Flag,
+  MessageSquareMore,
   Shield,
   ShieldAlert,
   Sparkles,
   TrendingUp,
+  Trash2,
   UserRound,
   UsersRound
 } from 'lucide-react';
 import { AppShell } from '@/components/layout/app-shell';
 import { auth } from '@/lib/firebase';
 import {
+  deleteProjectComment,
   listApplications,
   listAuditLogs,
   listProjects,
+  listRecentProjectComments,
   listStudents,
   listUserRecords,
   updateProjectModerationStatus,
   updateUserAccountStatus
 } from '@/lib/firestore';
 import { pushToast } from '@/components/ui/toaster';
-import type { Application, AuditLog, Project, StudentProfile, UserRecord } from '@/types';
+import type { Application, AuditLog, Project, ProjectComment, StudentProfile, UserRecord } from '@/types';
 
 export default function AdminPage() {
   const [actorId, setActorId] = useState<string | null>(auth.currentUser?.uid ?? null);
@@ -34,19 +40,21 @@ export default function AdminPage() {
   const [students, setStudents] = useState<StudentProfile[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [recentComments, setRecentComments] = useState<ProjectComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [workingKey, setWorkingKey] = useState<string | null>(null);
 
   useEffect(() => onAuthStateChanged(auth, (user) => setActorId(user?.uid ?? null)), []);
 
   async function loadAdminData() {
-    const [loadedUsers, loadedProjects, loadedStudents, loadedApplications, loadedAuditLogs] =
+    const [loadedUsers, loadedProjects, loadedStudents, loadedApplications, loadedAuditLogs, loadedComments] =
       await Promise.all([
         listUserRecords(),
         listProjects({ includeHidden: true }),
         listStudents(),
         listApplications(),
-        listAuditLogs(18)
+        listAuditLogs(18),
+        listRecentProjectComments(10)
       ]);
 
     setUsers(loadedUsers);
@@ -54,6 +62,7 @@ export default function AdminPage() {
     setStudents(loadedStudents);
     setApplications(loadedApplications);
     setAuditLogs(loadedAuditLogs);
+    setRecentComments(loadedComments);
   }
 
   useEffect(() => {
@@ -121,6 +130,15 @@ export default function AdminPage() {
     [students]
   );
 
+  const projectTitleById = useMemo(
+    () =>
+      projects.reduce<Record<string, string>>((acc, project) => {
+        acc[project.id] = project.title;
+        return acc;
+      }, {}),
+    [projects]
+  );
+
   const governanceSignals = useMemo(
     () => [
       {
@@ -168,6 +186,20 @@ export default function AdminPage() {
       pushToast('Project moderation updated.');
     } catch (error: any) {
       pushToast(error?.message || 'Unable to update project moderation state.');
+    } finally {
+      setWorkingKey(null);
+    }
+  }
+
+  async function moderateComment(commentId: string) {
+    if (!actorId) return;
+    setWorkingKey(`comment:${commentId}`);
+    try {
+      await deleteProjectComment(commentId, actorId);
+      await loadAdminData();
+      pushToast('Comment removed from the project feed.');
+    } catch (error: any) {
+      pushToast(error?.message || 'Unable to remove comment.');
     } finally {
       setWorkingKey(null);
     }
@@ -354,6 +386,67 @@ export default function AdminPage() {
                         </div>
                         <span className="badge capitalize">{log.targetType}</span>
                       </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="spotlight-card p-6">
+              <div className="relative z-[1] flex items-center justify-between gap-3">
+                <div>
+                  <p className="data-kicker">Comment moderation</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
+                    Recent project commentary
+                  </h2>
+                </div>
+                <div className="stat-orb h-12 w-12 rounded-[18px]">
+                  <MessageSquareMore size={18} />
+                </div>
+              </div>
+              <div className="mt-5 grid gap-3">
+                {recentComments.length === 0 ? (
+                  <div className="rail-card border-dashed p-4 text-sm text-slate-500 dark:text-slate-300">
+                    No recent comments to moderate.
+                  </div>
+                ) : (
+                  recentComments.map((comment) => (
+                    <div key={comment.id} className="rail-card p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold text-slate-900 dark:text-white">
+                              {comment.authorName}
+                            </p>
+                            {comment.authorRole ? (
+                              <span className="badge capitalize">{comment.authorRole}</span>
+                            ) : null}
+                          </div>
+                          <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                            {projectTitleById[comment.projectId] || comment.projectId}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Link
+                            href={`/projects/${comment.projectId}` as Route}
+                            className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-brand-300 hover:text-brand-600 dark:border-slate-700 dark:text-slate-200"
+                          >
+                            Open brief
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => void moderateComment(comment.id)}
+                            disabled={workingKey === `comment:${comment.id}`}
+                            className="rounded-full border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-60 dark:border-rose-500/30 dark:text-rose-300 dark:hover:bg-rose-500/10"
+                          >
+                            <Trash2 size={14} className="mr-2 inline-flex" />
+                            {workingKey === `comment:${comment.id}` ? 'Removing...' : 'Remove'}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                        {comment.text}
+                      </p>
                     </div>
                   ))
                 )}

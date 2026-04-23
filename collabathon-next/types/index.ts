@@ -212,3 +212,18 @@ export interface ProjectComment {
   createdAt?: Timestamp | FieldValue;
   updatedAt?: Timestamp | FieldValue;
 }
+
+export interface ProjectAttachment {
+  id: string;
+  projectId: string;
+  userId: string;
+  uploaderName: string;
+  uploaderRole?: UserRole;
+  fileName: string;
+  fileType?: string;
+  sizeBytes?: number;
+  downloadURL: string;
+  storagePath: string;
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
+}
