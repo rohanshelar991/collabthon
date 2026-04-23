@@ -1,10 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
-import { Compass, Filter, Search, Sparkles, Star, UsersRound } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import {
+  Bookmark,
+  BookmarkCheck,
+  BellPlus,
+  Compass,
+  Filter,
+  Radar,
+  Search,
+  Sparkles,
+  Star,
+  UsersRound
+} from 'lucide-react';
 import { AppShell } from '@/components/layout/app-shell';
-import { listStudents } from '@/lib/firestore';
+import { auth } from '@/lib/firebase';
+import {
+  createSearchSubscription,
+  listStudents,
+  listWatchlistItems,
+  toggleWatchlistItem
+} from '@/lib/firestore';
 import { recommendTeammates } from '@/lib/matching';
 import { pushToast } from '@/components/ui/toaster';
 import type { StudentProfile } from '@/types';
@@ -29,13 +48,18 @@ function initialsFor(name: string) {
     .toUpperCase();
 }
 
-export default function StudentsPage() {
-  const [skill, setSkill] = useState('');
-  const [college, setCollege] = useState('');
-  const [experience, setExperience] = useState('');
-  const [availableOnly, setAvailableOnly] = useState(false);
+function StudentsPageClient() {
+  const searchParams = useSearchParams();
+  const [userId, setUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
+  const [skill, setSkill] = useState(searchParams.get('skill') ?? '');
+  const [college, setCollege] = useState(searchParams.get('college') ?? '');
+  const [experience, setExperience] = useState(searchParams.get('experience') ?? '');
+  const [availableOnly, setAvailableOnly] = useState(searchParams.get('available') === 'true');
   const [students, setStudents] = useState<StudentProfile[]>([]);
+  const [savedStudentIds, setSavedStudentIds] = useState<string[]>([]);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [savingSearch, setSavingSearch] = useState(false);
 
   async function loadStudents(nextSkill = skill, nextAvailableOnly = availableOnly) {
     setLoading(true);
@@ -52,6 +76,42 @@ export default function StudentsPage() {
   useEffect(() => {
     void loadStudents();
   }, [availableOnly, skill]);
+
+  useEffect(() => {
+    const nextSkill = searchParams.get('skill') ?? '';
+    const nextCollege = searchParams.get('college') ?? '';
+    const nextExperience = searchParams.get('experience') ?? '';
+    const nextAvailableOnly = searchParams.get('available') === 'true';
+
+    setSkill((current) => (current === nextSkill ? current : nextSkill));
+    setCollege((current) => (current === nextCollege ? current : nextCollege));
+    setExperience((current) => (current === nextExperience ? current : nextExperience));
+    setAvailableOnly((current) => (current === nextAvailableOnly ? current : nextAvailableOnly));
+  }, [searchParams]);
+
+  useEffect(() => onAuthStateChanged(auth, (user) => setUserId(user?.uid ?? null)), []);
+
+  useEffect(() => {
+    if (!userId) {
+      setSavedStudentIds([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const items = await listWatchlistItems(userId, 'student');
+        if (!cancelled) setSavedStudentIds(items.map((item) => item.targetId));
+      } catch (error: any) {
+        if (!cancelled) pushToast(error?.message || 'Unable to load saved radar.');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const filtered = useMemo(() => {
     return students.filter((student) => {
@@ -90,10 +150,104 @@ export default function StudentsPage() {
         label: 'Advanced builders',
         value: students.filter((student) => student.experienceLevel === 'advanced').length,
         icon: Star
+      },
+      {
+        label: 'Saved radar',
+        value: savedStudentIds.length,
+        icon: Radar
       }
     ],
-    [students]
+    [savedStudentIds.length, students]
   );
+
+  async function handleToggleSaved(student: StudentProfile) {
+    if (!userId) {
+      pushToast('Sign in to save talent to your radar.');
+      return;
+    }
+
+    setSavingId(student.id);
+    try {
+      const result = await toggleWatchlistItem(userId, {
+        targetType: 'student',
+        targetId: student.id,
+        title: student.name,
+        subtitle:
+          student.college ||
+          `${experienceLabel(student.experienceLevel)} · ${student.skills.slice(0, 3).join(', ')}`,
+        href: `/students/${student.id}`
+      });
+
+      setSavedStudentIds((current) =>
+        result.saved
+          ? Array.from(new Set([...current, student.id]))
+          : current.filter((entry) => entry !== student.id)
+      );
+      pushToast(
+        result.saved
+          ? `${student.name} added to your saved radar.`
+          : `${student.name} removed from your saved radar.`
+      );
+    } catch (error: any) {
+      pushToast(error?.message || 'Unable to update saved radar.');
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  const hasActiveSearch =
+    Boolean(skill.trim()) ||
+    Boolean(college.trim()) ||
+    Boolean(experience.trim()) ||
+    availableOnly;
+
+  async function handleSaveSearch() {
+    if (!userId) {
+      pushToast('Sign in to save search alerts.');
+      return;
+    }
+
+    if (!hasActiveSearch) {
+      pushToast('Add at least one filter before saving a search alert.');
+      return;
+    }
+
+    setSavingSearch(true);
+    try {
+      const params = new URLSearchParams();
+      if (skill.trim()) params.set('skill', skill.trim());
+      if (college.trim()) params.set('college', college.trim());
+      if (experience.trim()) params.set('experience', experience.trim());
+      if (availableOnly) params.set('available', 'true');
+
+      const titleParts = [
+        skill.trim() ? `${skill.trim()} talent` : '',
+        college.trim() ? college.trim() : '',
+        experience ? experienceLabel(experience as StudentProfile['experienceLevel']) : '',
+        availableOnly ? 'available now' : ''
+      ].filter(Boolean);
+
+      await createSearchSubscription(userId, {
+        targetType: 'student',
+        title: titleParts.join(' · ') || 'Student talent search',
+        description: 'Saved teammate discovery alert',
+        href: `/students?${params.toString()}`,
+        query: skill.trim(),
+        filters: {
+          skill: skill.trim() || null,
+          college: college.trim() || null,
+          experience: experience || null,
+          availableOnly
+        }
+      });
+
+      pushToast('Search alert saved to your radar.');
+    } catch (error: any) {
+      pushToast(error?.message || 'Unable to save search alert.');
+    } finally {
+      setSavingSearch(false);
+    }
+  }
 
   return (
     <AppShell>
@@ -217,6 +371,17 @@ export default function StudentsPage() {
               </button>
               <button
                 type="button"
+                className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-brand-300 hover:text-brand-600 dark:border-slate-700 dark:text-slate-200"
+                disabled={savingSearch}
+                onClick={() => void handleSaveSearch()}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <BellPlus size={15} />
+                  {savingSearch ? 'Saving alert...' : 'Save search alert'}
+                </span>
+              </button>
+              <button
+                type="button"
                 className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 dark:border-slate-700 dark:text-slate-200"
                 onClick={() => {
                   setSkill('');
@@ -260,6 +425,20 @@ export default function StudentsPage() {
               </div>
             )}
           </div>
+
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-[24px] border border-slate-200/80 bg-white/70 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/50">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                Saved radar
+              </p>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                Keep standout teammates close so you can message or revisit them fast.
+              </p>
+            </div>
+            <Link href="/watchlist" className="btn-primary">
+              Open saved radar
+            </Link>
+          </div>
         </section>
       </div>
 
@@ -292,15 +471,38 @@ export default function StudentsPage() {
                       </p>
                     </div>
                   </div>
-                  <span
-                    className={`badge ${
-                      student.available
-                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200'
-                        : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
-                    }`}
-                  >
-                    {student.available ? 'Available' : 'Busy'}
-                  </span>
+                  <div className="flex flex-col items-end gap-2">
+                    <span
+                      className={`badge ${
+                        student.available
+                          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200'
+                          : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                      }`}
+                    >
+                      {student.available ? 'Available' : 'Busy'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => void handleToggleSaved(student)}
+                      disabled={savingId === student.id}
+                      className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                        savedStudentIds.includes(student.id)
+                          ? 'bg-brand-500 text-white shadow-[0_12px_30px_rgba(14,165,233,0.28)]'
+                          : 'border border-slate-200 bg-white/85 text-slate-700 hover:border-brand-300 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-200'
+                      }`}
+                    >
+                      {savedStudentIds.includes(student.id) ? (
+                        <BookmarkCheck size={14} />
+                      ) : (
+                        <Bookmark size={14} />
+                      )}
+                      {savingId === student.id
+                        ? 'Saving...'
+                        : savedStudentIds.includes(student.id)
+                          ? 'Saved'
+                          : 'Save'}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -363,5 +565,13 @@ export default function StudentsPage() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+export default function StudentsPage() {
+  return (
+    <Suspense fallback={<AppShell><div className="card p-6 text-sm text-slate-500 dark:text-slate-300">Loading talent radar...</div></AppShell>}>
+      <StudentsPageClient />
+    </Suspense>
   );
 }

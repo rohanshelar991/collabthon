@@ -19,6 +19,7 @@ import {
   UserCircle2,
   UserCog
 } from 'lucide-react';
+import { CommandPalette } from './command-palette';
 import { ThemeToggleButton } from './theme-provider';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -31,6 +32,7 @@ import type { UserRole } from '@/lib/roles';
 const nav = [
   { href: '/dashboard' as Route, label: 'Overview', icon: Home },
   { href: '/profile' as Route, label: 'Profile', icon: UserCog },
+  { href: '/watchlist' as Route, label: 'Radar', icon: Radar },
   { href: '/students' as Route, label: 'Students', icon: UserCircle2 },
   { href: '/projects' as Route, label: 'Projects', icon: Briefcase },
   { href: '/workspace' as Route, label: 'Workspace', icon: FolderKanban },
@@ -49,7 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [authResolved, setAuthResolved] = useState(false);
   const visibleNav = nav.filter((item) => (item.label === 'Admin' ? role === 'admin' : true));
   const mobileNav = visibleNav.filter((item) =>
-    ['Overview', 'Projects', 'Workspace', 'Messages', 'Billing'].includes(item.label)
+    ['Overview', 'Radar', 'Projects', 'Workspace', 'Messages'].includes(item.label)
   );
   const workspacePulse = [
     {
@@ -286,7 +288,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </div>
-          <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">
+          <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:flex-nowrap sm:justify-end">
             <div className="hidden gap-3 lg:flex">
               <div className="header-status-card">
                 <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Alerts</p>
@@ -297,6 +299,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <p className="mt-1 text-lg font-semibold text-slate-900 capitalize dark:text-white">{role ?? 'guest'}</p>
               </div>
             </div>
+            <CommandPalette
+              role={role}
+              notificationCount={notificationCount}
+              onSignOut={() => signOut(auth)}
+            />
             <ThemeToggleButton />
           </div>
         </header>

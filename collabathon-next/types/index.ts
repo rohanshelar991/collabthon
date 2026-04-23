@@ -166,6 +166,7 @@ export interface SubscriptionRecord {
 
 export interface AuditLog {
   id: string;
+  projectId?: string;
   actorId?: string;
   actorDisplayName?: string;
   targetType: 'user' | 'project' | 'task' | 'team' | 'subscription' | 'system';
@@ -174,4 +175,40 @@ export interface AuditLog {
   summary: string;
   metadata?: Record<string, unknown>;
   createdAt?: Timestamp | FieldValue;
+}
+
+export interface WatchlistItem {
+  id: string;
+  userId: string;
+  targetType: 'student' | 'project';
+  targetId: string;
+  title: string;
+  subtitle?: string;
+  href: string;
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
+}
+
+export interface SearchSubscription {
+  id: string;
+  userId: string;
+  targetType: 'student' | 'project';
+  title: string;
+  description?: string;
+  href: string;
+  query?: string;
+  filters?: Record<string, string | boolean | number | null | undefined>;
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
+}
+
+export interface ProjectComment {
+  id: string;
+  projectId: string;
+  userId: string;
+  authorName: string;
+  authorRole?: UserRole;
+  text: string;
+  createdAt?: Timestamp | FieldValue;
+  updatedAt?: Timestamp | FieldValue;
 }

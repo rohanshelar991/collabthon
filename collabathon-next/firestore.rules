@@ -30,6 +30,13 @@ service cloud.firestore {
       return isSignedIn() &&
         get(/databases/$(database)/documents/projects/$(projectId)).data.clientId == request.auth.uid;
     }
+    function canReadProject(projectId) {
+      return exists(/databases/$(database)/documents/projects/$(projectId)) && (
+        get(/databases/$(database)/documents/projects/$(projectId)).data.moderationStatus != 'hidden' ||
+        hasRole('admin') ||
+        ownsProject(projectId)
+      );
+    }
     function teamDoc(teamId) {
       return get(/databases/$(database)/documents/teams/$(teamId));
     }
@@ -116,6 +123,42 @@ service cloud.firestore {
       allow update: if isSignedIn() && (
         request.auth.uid == resource.data.userId ||
         hasRole('admin')
+      );
+    }
+
+    match /watchlists/{watchId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        hasRole('admin')
+      );
+      allow create: if isActiveAccount() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isActiveAccount() && resource.data.userId == request.auth.uid;
+    }
+
+    match /searchSubscriptions/{subscriptionId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        hasRole('admin')
+      );
+      allow create: if isActiveAccount() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isActiveAccount() && resource.data.userId == request.auth.uid;
+    }
+
+    match /projectComments/{commentId} {
+      allow read: if canReadProject(resource.data.projectId);
+      allow create: if isActiveAccount() &&
+        request.resource.data.userId == request.auth.uid &&
+        canReadProject(request.resource.data.projectId);
+      allow update, delete: if hasRole('admin') || (
+        isActiveAccount() && resource.data.userId == request.auth.uid
+      );
+    }
+
+    match /projectActivities/{activityId} {
+      allow read: if canReadProject(resource.data.projectId);
+      allow create: if isSignedIn() && (
+        hasRole('admin') ||
+        request.resource.data.actorId == request.auth.uid
       );
     }
 

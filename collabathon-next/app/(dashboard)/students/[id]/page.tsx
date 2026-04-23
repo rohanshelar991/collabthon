@@ -2,10 +2,20 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, BriefcaseBusiness, MessageSquareText, Sparkles, Star } from 'lucide-react';
+import { onAuthStateChanged } from 'firebase/auth';
+import {
+  ArrowLeft,
+  Bookmark,
+  BookmarkCheck,
+  BriefcaseBusiness,
+  MessageSquareText,
+  Sparkles,
+  Star
+} from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { AppShell } from '@/components/layout/app-shell';
-import { getStudentById } from '@/lib/firestore';
+import { auth } from '@/lib/firebase';
+import { getStudentById, listWatchlistItems, toggleWatchlistItem } from '@/lib/firestore';
 import { pushToast } from '@/components/ui/toaster';
 import type { StudentProfile } from '@/types';
 
@@ -31,8 +41,13 @@ function experienceLabel(level?: StudentProfile['experienceLevel']) {
 
 export default function StudentDetailPage() {
   const params = useParams<{ id: string }>();
+  const [userId, setUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
   const [student, setStudent] = useState<StudentProfile | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => onAuthStateChanged(auth, (user) => setUserId(user?.uid ?? null)), []);
 
   useEffect(() => {
     if (!params?.id) return;
@@ -43,6 +58,26 @@ export default function StudentDetailPage() {
       .finally(() => setLoading(false));
   }, [params?.id]);
 
+  useEffect(() => {
+    if (!userId || !params?.id) {
+      setSaved(false);
+      return;
+    }
+
+    let cancelled = false;
+    listWatchlistItems(userId, 'student')
+      .then((items) => {
+        if (!cancelled) setSaved(items.some((item) => item.targetId === params.id));
+      })
+      .catch((error: any) => {
+        if (!cancelled) pushToast(error?.message || 'Unable to load saved radar.');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [params?.id, userId]);
+
   const collaborationSignals = useMemo(() => {
     if (!student) return [];
     return [
@@ -51,6 +86,37 @@ export default function StudentDetailPage() {
       { label: 'Stack depth', value: `${student.skills.length} listed skills`, icon: BriefcaseBusiness }
     ];
   }, [student]);
+
+  async function handleToggleSaved() {
+    if (!student) return;
+    if (!userId) {
+      pushToast('Sign in to save talent to your radar.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const result = await toggleWatchlistItem(userId, {
+        targetType: 'student',
+        targetId: student.id,
+        title: student.name,
+        subtitle:
+          student.college ||
+          `${experienceLabel(student.experienceLevel)} · ${student.skills.slice(0, 3).join(', ')}`,
+        href: `/students/${student.id}`
+      });
+      setSaved(result.saved);
+      pushToast(
+        result.saved
+          ? `${student.name} added to your saved radar.`
+          : `${student.name} removed from your saved radar.`
+      );
+    } catch (error: any) {
+      pushToast(error?.message || 'Unable to update saved radar.');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <AppShell>
@@ -125,9 +191,23 @@ export default function StudentDetailPage() {
                   <MessageSquareText size={16} />
                   Message {student.name.split(' ')[0]}
                 </Link>
-                <div className="rounded-[24px] border border-white/10 bg-white/10 px-4 py-3 text-sm text-slate-200">
-                  Chat ID: <span className="font-semibold text-white">{student.id}</span>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => void handleToggleSaved()}
+                  disabled={saving}
+                  className={`inline-flex w-full items-center justify-center gap-2 rounded-[24px] px-4 py-3 text-sm font-semibold transition sm:w-auto ${
+                    saved
+                      ? 'bg-white text-slate-950 shadow-[0_18px_40px_rgba(255,255,255,0.18)]'
+                      : 'border border-white/10 bg-white/10 text-slate-100 hover:bg-white/15'
+                  }`}
+                >
+                  {saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+                  {saving ? 'Saving...' : saved ? 'Saved to radar' : 'Save to radar'}
+                </button>
+              </div>
+
+              <div className="mt-3 rounded-[24px] border border-white/10 bg-white/10 px-4 py-3 text-sm text-slate-200">
+                Chat ID: <span className="font-semibold text-white">{student.id}</span>
               </div>
             </section>
 

@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -19,13 +20,16 @@ import {
   Message,
   Notification,
   Project,
+  ProjectComment,
   Review,
+  SearchSubscription,
   Sprint,
   StudentProfile,
   SubscriptionRecord,
   Team,
   TeamTask,
-  UserRecord
+  UserRecord,
+  WatchlistItem
 } from '@/types';
 
 const FIRESTORE_TIMEOUT_MS = 8000;
@@ -45,6 +49,16 @@ type ApplicationFilters = {
 type NotificationInput = Omit<Notification, 'id' | 'read' | 'createdAt' | 'readAt'> & {
   read?: boolean;
 };
+
+type SearchSubscriptionInput = Omit<
+  SearchSubscription,
+  'id' | 'userId' | 'createdAt' | 'updatedAt'
+>;
+
+type ProjectCommentInput = Omit<
+  ProjectComment,
+  'id' | 'projectId' | 'userId' | 'authorName' | 'authorRole' | 'createdAt' | 'updatedAt'
+>;
 
 type TeamFilters = {
   memberId?: string;
@@ -232,10 +246,37 @@ export async function createProject(data: Omit<Project, 'id' | 'createdAt' | 'up
     'Creating project'
   );
 
+  await Promise.allSettled([
+    createAuditLog({
+      actorId: data.clientId,
+      targetType: 'project',
+      targetId: ref.id,
+      action: 'project.created',
+      summary: `${data.title} was created and published to the marketplace.`,
+      metadata: {
+        priority: data.priority || 'growth',
+        requiredSkills: data.requiredSkills || [],
+        budget: data.budget || null
+      }
+    }),
+    createProjectActivity(ref.id, {
+      actorId: data.clientId,
+      targetType: 'project',
+      targetId: ref.id,
+      action: 'project.created',
+      summary: `${data.title} was created and published to the marketplace.`,
+      metadata: {
+        priority: data.priority || 'growth',
+        requiredSkills: data.requiredSkills || [],
+        budget: data.budget || null
+      }
+    })
+  ]);
+
   return ref.id;
 }
 
-export async function updateProjectStatus(projectId: string, status: Project['status']) {
+export async function updateProjectStatus(projectId: string, status: Project['status'], actorId?: string) {
   await withFirestoreTimeout(
     updateDoc(doc(db, 'projects', projectId), {
       status,
@@ -243,6 +284,27 @@ export async function updateProjectStatus(projectId: string, status: Project['st
     }),
     'Updating project status'
   );
+
+  const project = await getProjectById(projectId);
+  const eventActorId = actorId || project?.clientId;
+  await Promise.allSettled([
+    createAuditLog({
+      actorId: eventActorId,
+      targetType: 'project',
+      targetId: projectId,
+      action: 'project.status_changed',
+      summary: `${project?.title || projectId} moved to ${status}.`,
+      metadata: { status }
+    }),
+    createProjectActivity(projectId, {
+      actorId: eventActorId,
+      targetType: 'project',
+      targetId: projectId,
+      action: 'project.status_changed',
+      summary: `${project?.title || projectId} moved to ${status}.`,
+      metadata: { status }
+    })
+  ]);
 }
 
 export async function listApplications(filters: ApplicationFilters = {}) {
@@ -292,6 +354,22 @@ export async function applyToProject(projectId: string, studentId: string, messa
         applicationId: ref.id,
         type: 'application',
         content: `${student?.name || 'A student'} applied to ${project.title}.`
+      }),
+      createAuditLog({
+        actorId: studentId,
+        targetType: 'project',
+        targetId: projectId,
+        action: 'application.submitted',
+        summary: `${student?.name || 'A student'} applied to ${project?.title || 'a project'}.`,
+        metadata: { applicationId: ref.id, studentId }
+      }),
+      createProjectActivity(projectId, {
+        actorId: studentId,
+        targetType: 'project',
+        targetId: projectId,
+        action: 'application.submitted',
+        summary: `${student?.name || 'A student'} applied to ${project?.title || 'a project'}.`,
+        metadata: { applicationId: ref.id, studentId }
       })
     ]);
   }
@@ -358,6 +436,25 @@ export async function createTeam(projectId: string, memberIds: string[]) {
     })
   ]);
 
+  await Promise.allSettled([
+    createAuditLog({
+      actorId: project?.clientId,
+      targetType: 'project',
+      targetId: projectId,
+      action: 'team.created',
+      summary: `A live workspace was created for ${project?.title || 'this project'}.`,
+      metadata: { teamId: ref.id, memberIds }
+    }),
+    createProjectActivity(projectId, {
+      actorId: project?.clientId,
+      targetType: 'project',
+      targetId: projectId,
+      action: 'team.created',
+      summary: `A live workspace was created for ${project?.title || 'this project'}.`,
+      metadata: { teamId: ref.id, memberIds }
+    })
+  ]);
+
   return ref.id;
 }
 
@@ -376,6 +473,22 @@ export async function acceptApplication(applicationId: string) {
       applicationId: application.id,
       type: 'team',
       content: `You were accepted for ${project?.title || 'a project'}. Your team workspace is now live.`
+    }),
+    createAuditLog({
+      actorId: project?.clientId,
+      targetType: 'project',
+      targetId: application.projectId,
+      action: 'application.accepted',
+      summary: `${application.studentName || application.studentId} was accepted for ${project?.title || 'a project'}.`,
+      metadata: { applicationId: application.id, teamId }
+    }),
+    createProjectActivity(application.projectId, {
+      actorId: project?.clientId,
+      targetType: 'project',
+      targetId: application.projectId,
+      action: 'application.accepted',
+      summary: `${application.studentName || application.studentId} was accepted for ${project?.title || 'a project'}.`,
+      metadata: { applicationId: application.id, teamId }
     })
   ]);
 
@@ -395,6 +508,22 @@ export async function rejectApplication(applicationId: string) {
       applicationId: application.id,
       type: 'application',
       content: `Your application for ${project?.title || 'a project'} was updated.`
+    }),
+    createAuditLog({
+      actorId: project?.clientId,
+      targetType: 'project',
+      targetId: application.projectId,
+      action: 'application.rejected',
+      summary: `${application.studentName || application.studentId} was rejected for ${project?.title || 'a project'}.`,
+      metadata: { applicationId: application.id }
+    }),
+    createProjectActivity(application.projectId, {
+      actorId: project?.clientId,
+      targetType: 'project',
+      targetId: application.projectId,
+      action: 'application.rejected',
+      summary: `${application.studentName || application.studentId} was rejected for ${project?.title || 'a project'}.`,
+      metadata: { applicationId: application.id }
     })
   ]);
 
@@ -676,6 +805,168 @@ export async function markAllNotificationsRead(userId: string) {
   await withFirestoreTimeout(batch.commit(), 'Marking notifications as read');
 }
 
+function watchlistDocId(userId: string, targetType: WatchlistItem['targetType'], targetId: string) {
+  return `${userId}_${targetType}_${targetId}`;
+}
+
+export async function listWatchlistItems(
+  userId: string,
+  targetType?: WatchlistItem['targetType']
+) {
+  const watchlistQuery = query(collection(db, 'watchlists'), where('userId', '==', userId));
+  const snap = await withFirestoreTimeout(getDocs(watchlistQuery), 'Loading saved radar');
+  const items = byNewest(
+    snap.docs.map((watchDoc) => ({
+      id: watchDoc.id,
+      ...(watchDoc.data() as Omit<WatchlistItem, 'id'>)
+    }))
+  );
+
+  return targetType ? items.filter((item) => item.targetType === targetType) : items;
+}
+
+export async function toggleWatchlistItem(
+  userId: string,
+  item: Omit<WatchlistItem, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
+) {
+  const ref = doc(db, 'watchlists', watchlistDocId(userId, item.targetType, item.targetId));
+  const snap = await withFirestoreTimeout(getDoc(ref), 'Checking saved radar');
+
+  if (snap.exists()) {
+    await withFirestoreTimeout(deleteDoc(ref), 'Removing saved radar');
+    return { saved: false, id: ref.id };
+  }
+
+  await setDocWithTimestamps(
+    ref,
+    {
+      userId,
+      targetType: item.targetType,
+      targetId: item.targetId,
+      title: item.title,
+      subtitle: item.subtitle || '',
+      href: item.href
+    },
+    'Saving to radar'
+  );
+
+  return { saved: true, id: ref.id };
+}
+
+export async function listSearchSubscriptions(
+  userId: string,
+  targetType?: SearchSubscription['targetType']
+) {
+  const subscriptionQuery = query(
+    collection(db, 'searchSubscriptions'),
+    where('userId', '==', userId)
+  );
+  const snap = await withFirestoreTimeout(getDocs(subscriptionQuery), 'Loading saved search alerts');
+  const items = byNewest(
+    snap.docs.map((subscriptionDoc) => ({
+      id: subscriptionDoc.id,
+      ...(subscriptionDoc.data() as Omit<SearchSubscription, 'id'>)
+    }))
+  );
+
+  return targetType ? items.filter((item) => item.targetType === targetType) : items;
+}
+
+export async function createSearchSubscription(userId: string, input: SearchSubscriptionInput) {
+  const ref = await withFirestoreTimeout(
+    addDoc(collection(db, 'searchSubscriptions'), {
+      ...input,
+      userId,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    } satisfies Partial<SearchSubscription>),
+    'Saving search alert'
+  );
+
+  await Promise.allSettled([
+    createNotification({
+      userId,
+      actorId: userId,
+      type: 'system',
+      content: `${input.title} was saved to your live search alerts.`
+    })
+  ]);
+
+  return ref.id;
+}
+
+export async function deleteSearchSubscription(subscriptionId: string) {
+  await withFirestoreTimeout(
+    deleteDoc(doc(db, 'searchSubscriptions', subscriptionId)),
+    'Deleting search alert'
+  );
+}
+
+export async function listProjectComments(projectId: string) {
+  const commentQuery = query(collection(db, 'projectComments'), where('projectId', '==', projectId));
+  const snap = await withFirestoreTimeout(getDocs(commentQuery), 'Loading project comments');
+  return byNewest(
+    snap.docs.map((commentDoc) => ({
+      id: commentDoc.id,
+      ...(commentDoc.data() as Omit<ProjectComment, 'id'>)
+    }))
+  );
+}
+
+export async function addProjectComment(projectId: string, userId: string, input: ProjectCommentInput) {
+  const [author, project] = await Promise.all([getUserRecord(userId), getProjectById(projectId)]);
+  const ref = await withFirestoreTimeout(
+    addDoc(collection(db, 'projectComments'), {
+      projectId,
+      userId,
+      text: input.text,
+      authorName: author?.displayName || author?.email || 'Collabathon user',
+      authorRole: author?.role,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    } satisfies Partial<ProjectComment>),
+    'Posting project comment'
+  );
+
+  await Promise.allSettled([
+    createAuditLog({
+      actorId: userId,
+      targetType: 'project',
+      targetId: projectId,
+      action: 'comment.added',
+      summary: `${author?.displayName || author?.email || 'A collaborator'} commented on ${project?.title || 'a project'}.`,
+      metadata: { commentId: ref.id }
+    }),
+    createProjectActivity(projectId, {
+      actorId: userId,
+      targetType: 'project',
+      targetId: projectId,
+      action: 'comment.added',
+      summary: `${author?.displayName || author?.email || 'A collaborator'} commented on ${project?.title || 'a project'}.`,
+      metadata: { commentId: ref.id }
+    }),
+    project?.clientId && project.clientId !== userId
+      ? createNotification({
+          userId: project.clientId,
+          actorId: userId,
+          projectId,
+          type: 'message',
+          content: `${author?.displayName || author?.email || 'A collaborator'} added a comment to ${project.title}.`
+        })
+      : Promise.resolve()
+  ]);
+
+  return ref.id;
+}
+
+export async function listProjectActivity(projectId: string, limit = 18) {
+  const activityQuery = query(collection(db, 'projectActivities'), where('projectId', '==', projectId));
+  const snap = await withFirestoreTimeout(getDocs(activityQuery), 'Loading project activity');
+  return byNewest(
+    snap.docs.map((logDoc) => ({ id: logDoc.id, ...(logDoc.data() as Omit<AuditLog, 'id'>) }))
+  ).slice(0, limit);
+}
+
 export async function getProfile(userId: string) {
   const ref = doc(db, 'students', userId);
   const snap = await withFirestoreTimeout(getDoc(ref), 'Loading student profile');
@@ -715,6 +1006,20 @@ export async function createAuditLog(input: AuditLogInput) {
       createdAt: serverTimestamp()
     }),
     'Writing audit log'
+  );
+  return ref.id;
+}
+
+export async function createProjectActivity(projectId: string, input: AuditLogInput) {
+  const actorDisplayName = input.actorId ? (await getUserRecord(input.actorId))?.displayName : undefined;
+  const ref = await withFirestoreTimeout(
+    addDoc(collection(db, 'projectActivities'), {
+      ...input,
+      projectId,
+      actorDisplayName: input.actorDisplayName || actorDisplayName || '',
+      createdAt: serverTimestamp()
+    }),
+    'Writing project activity'
   );
   return ref.id;
 }

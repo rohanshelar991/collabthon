@@ -9,6 +9,7 @@ import {
   ChartNoAxesCombined,
   Compass,
   MoveRight,
+  Radar,
   Sparkles,
   UsersRound
 } from 'lucide-react';
@@ -23,11 +24,12 @@ import {
   listNotifications,
   listProjects,
   listStudents,
+  listWatchlistItems,
   listTeamsForUser
 } from '@/lib/firestore';
 import { recommendTeammates } from '@/lib/matching';
 import { pushToast } from '@/components/ui/toaster';
-import type { Application, Notification, Project, StudentProfile } from '@/types';
+import type { Application, Notification, Project, StudentProfile, WatchlistItem } from '@/types';
 import type { UserRole } from '@/lib/roles';
 
 function priorityTone(priority?: Project['priority']) {
@@ -48,6 +50,7 @@ export default function DashboardPage() {
   const [students, setStudents] = useState<StudentProfile[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [teams, setTeams] = useState<Array<{ id: string }>>([]);
   const [myProfile, setMyProfile] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,6 +59,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!userId) {
+      setWatchlist([]);
       setLoading(false);
       return;
     }
@@ -69,14 +73,16 @@ export default function DashboardPage() {
         if (cancelled) return;
         setRole(userRecord?.role ?? null);
 
-        const [loadedStudents, loadedNotifications] = await Promise.all([
+        const [loadedStudents, loadedNotifications, savedItems] = await Promise.all([
           listStudents(),
-          listNotifications(userId)
+          listNotifications(userId),
+          listWatchlistItems(userId)
         ]);
 
         if (cancelled) return;
         setStudents(loadedStudents);
         setNotifications(loadedNotifications);
+        setWatchlist(savedItems);
 
         if (userRecord?.role === 'client') {
           const clientProjects = await listProjects({ clientId: userId });
@@ -142,6 +148,14 @@ export default function DashboardPage() {
       4
     );
   }, [myProfile?.skills, students, userId]);
+  const savedStudents = useMemo(
+    () => watchlist.filter((item) => item.targetType === 'student').slice(0, 3),
+    [watchlist]
+  );
+  const savedProjects = useMemo(
+    () => watchlist.filter((item) => item.targetType === 'project').slice(0, 3),
+    [watchlist]
+  );
 
   const visibleProjects =
     role === 'client' ? projects : projects.filter((project) => project.status !== 'completed');
@@ -410,9 +424,12 @@ export default function DashboardPage() {
                       </span>
                       <span className="badge capitalize">{project.status}</span>
                     </div>
-                    <h3 className="mt-3 text-lg font-semibold text-slate-900 dark:text-white">
+                    <Link
+                      href={`/projects/${project.id}` as Route}
+                      className="mt-3 inline-flex text-lg font-semibold text-slate-900 transition hover:text-brand-600 dark:text-white dark:hover:text-brand-300"
+                    >
                       {project.title}
-                    </h3>
+                    </Link>
                     <p className="mt-2 max-w-3xl text-sm text-slate-500 dark:text-slate-300">
                       {project.description}
                     </p>
@@ -433,6 +450,14 @@ export default function DashboardPage() {
                 </div>
                 <div className="mt-4 score-meter">
                   <span style={{ width: `${Math.max(42, 96 - project.requiredSkills.length * 6)}%` }} />
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <Link
+                    href={`/projects/${project.id}` as Route}
+                    className="text-sm font-semibold text-brand-600 transition hover:text-brand-500 dark:text-brand-300"
+                  >
+                    Open brief
+                  </Link>
                 </div>
               </div>
             ))}
@@ -485,6 +510,50 @@ export default function DashboardPage() {
                   Build your profile to unlock teammate recommendations.
                 </div>
               ) : null}
+            </div>
+          </div>
+
+          <div className="spotlight-card p-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="data-kicker">Saved radar</p>
+                <h2 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">
+                  High-signal shortlist
+                </h2>
+              </div>
+              <Radar size={18} className="text-brand-500" />
+            </div>
+            <div className="mt-4 grid gap-3">
+              {savedStudents.length === 0 && savedProjects.length === 0 && !loading ? (
+                <div className="rail-card border-dashed p-4 text-sm text-slate-500 dark:text-slate-300">
+                  Save standout students and briefs to keep your next move close.
+                </div>
+              ) : null}
+
+              {[...savedStudents, ...savedProjects].map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.href as Route}
+                  className="rail-card p-4 transition hover:-translate-y-0.5"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="badge capitalize">{item.targetType}</span>
+                        <p className="font-semibold text-slate-900 dark:text-white">{item.title}</p>
+                      </div>
+                      <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
+                        {item.subtitle || 'Saved radar signal'}
+                      </p>
+                    </div>
+                    <MoveRight size={16} className="text-slate-400" />
+                  </div>
+                </Link>
+              ))}
+
+              <Link href="/watchlist" className="btn-primary justify-center">
+                Open saved radar
+              </Link>
             </div>
           </div>
 

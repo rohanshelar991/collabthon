@@ -1,16 +1,31 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { BriefcaseBusiness, Layers3, Sparkles, UsersRound } from 'lucide-react';
+import Link from 'next/link';
+import { type Route } from 'next';
+import { useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import {
+  BellPlus,
+  Bookmark,
+  BookmarkCheck,
+  BriefcaseBusiness,
+  Layers3,
+  Radar,
+  Sparkles,
+  UsersRound
+} from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { AppShell } from '@/components/layout/app-shell';
 import { auth } from '@/lib/firebase';
 import {
   acceptApplication,
+  createSearchSubscription,
   getUserRecord,
   listApplications,
   listProjects,
+  listWatchlistItems,
   rejectApplication,
+  toggleWatchlistItem,
   updateProjectStatus
 } from '@/lib/firestore';
 import { ApplyButton, ProjectComposer } from './project-actions';
@@ -29,15 +44,48 @@ function statusTone(status: Project['status']) {
   }
 }
 
-export default function ProjectsPage() {
+function ProjectsPageClient() {
+  const searchParams = useSearchParams();
   const [userId, setUserId] = useState<string | null>(auth.currentUser?.uid ?? null);
   const [role, setRole] = useState<UserRole | null>(null);
+  const [queryText, setQueryText] = useState(searchParams.get('query') ?? '');
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? 'all');
   const [projects, setProjects] = useState<Project[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [savedProjectIds, setSavedProjectIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [workingId, setWorkingId] = useState<string | null>(null);
+  const [savingSearch, setSavingSearch] = useState(false);
 
   useEffect(() => onAuthStateChanged(auth, (user) => setUserId(user?.uid ?? null)), []);
+
+  useEffect(() => {
+    const nextQuery = searchParams.get('query') ?? '';
+    const nextStatus = searchParams.get('status') ?? 'all';
+    setQueryText((current) => (current === nextQuery ? current : nextQuery));
+    setStatusFilter((current) => (current === nextStatus ? current : nextStatus));
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!userId) {
+      setSavedProjectIds([]);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const items = await listWatchlistItems(userId, 'project');
+        if (!cancelled) setSavedProjectIds(items.map((item) => item.targetId));
+      } catch (error: any) {
+        if (!cancelled) pushToast(error?.message || 'Unable to load saved briefs.');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   async function loadPageData(activeUserId = userId) {
     if (!activeUserId) {
@@ -108,18 +156,109 @@ export default function ProjectsPage() {
     [applications]
   );
 
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const matchesStatus = statusFilter === 'all' ? true : project.status === statusFilter;
+      const normalizedQuery = queryText.trim().toLowerCase();
+      const matchesQuery = normalizedQuery
+        ? [project.title, project.description, project.requiredSkills.join(' ')]
+            .join(' ')
+            .toLowerCase()
+            .includes(normalizedQuery)
+        : true;
+      return matchesStatus && matchesQuery;
+    });
+  }, [projects, queryText, statusFilter]);
+
   const metrics =
     role === 'client'
       ? [
           { label: 'Open briefs', value: projects.filter((project) => project.status === 'open').length, icon: BriefcaseBusiness },
           { label: 'Pending applicants', value: applications.filter((application) => application.status === 'pending').length, icon: UsersRound },
-          { label: 'Active deliveries', value: projects.filter((project) => project.status === 'in-progress').length, icon: Layers3 }
+          { label: 'Active deliveries', value: projects.filter((project) => project.status === 'in-progress').length, icon: Layers3 },
+          { label: 'Saved radar', value: savedProjectIds.length, icon: Radar }
         ]
       : [
           { label: 'Open roles', value: projects.filter((project) => project.status === 'open').length, icon: BriefcaseBusiness },
           { label: 'My applications', value: applications.length, icon: Sparkles },
-          { label: 'Accepted', value: applications.filter((application) => application.status === 'accepted').length, icon: UsersRound }
+          { label: 'Accepted', value: applications.filter((application) => application.status === 'accepted').length, icon: UsersRound },
+          { label: 'Saved radar', value: savedProjectIds.length, icon: Radar }
         ];
+
+  async function handleToggleSaved(project: Project) {
+    if (!userId) {
+      pushToast('Sign in to save briefs to your radar.');
+      return;
+    }
+
+    setWorkingId(`save-${project.id}`);
+    try {
+      const result = await toggleWatchlistItem(userId, {
+        targetType: 'project',
+        targetId: project.id,
+        title: project.title,
+        subtitle: project.deadline ? `Deadline ${project.deadline}` : 'Saved project signal',
+        href: `/projects/${project.id}`
+      });
+
+      setSavedProjectIds((current) =>
+        result.saved
+          ? Array.from(new Set([...current, project.id]))
+          : current.filter((entry) => entry !== project.id)
+      );
+      pushToast(
+        result.saved
+          ? `${project.title} added to your saved radar.`
+          : `${project.title} removed from your saved radar.`
+      );
+    } catch (error: any) {
+      pushToast(error?.message || 'Unable to update saved radar.');
+    } finally {
+      setWorkingId(null);
+    }
+  }
+
+  async function handleSaveSearch() {
+    if (!userId) {
+      pushToast('Sign in to save search alerts.');
+      return;
+    }
+
+    if (!queryText.trim() && statusFilter === 'all') {
+      pushToast('Add a query or status filter before saving a search alert.');
+      return;
+    }
+
+    setSavingSearch(true);
+    try {
+      const params = new URLSearchParams();
+      if (queryText.trim()) params.set('query', queryText.trim());
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+
+      await createSearchSubscription(userId, {
+        targetType: 'project',
+        title:
+          queryText.trim() && statusFilter !== 'all'
+            ? `${statusFilter} briefs · ${queryText.trim()}`
+            : queryText.trim()
+              ? `Project search · ${queryText.trim()}`
+              : `${statusFilter} briefs`,
+        description: 'Saved project board alert',
+        href: `/projects?${params.toString()}`,
+        query: queryText.trim(),
+        filters: {
+          query: queryText.trim() || null,
+          status: statusFilter
+        }
+      });
+
+      pushToast('Project search alert saved to your radar.');
+    } catch (error: any) {
+      pushToast(error?.message || 'Unable to save search alert.');
+    } finally {
+      setSavingSearch(false);
+    }
+  }
 
   return (
     <AppShell>
@@ -166,7 +305,22 @@ export default function ProjectsPage() {
       <div className="mt-6 grid gap-6 xl:grid-cols-[0.92fr,1.08fr]">
         <section className="aura-card p-6">
           {role === 'client' ? (
-            <ProjectComposer onProjectCreated={(project) => setProjects((current) => [project, ...current])} />
+            <div className="grid gap-4">
+              <ProjectComposer onProjectCreated={(project) => setProjects((current) => [project, ...current])} />
+              <div className="rail-card flex flex-wrap items-center justify-between gap-3 p-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                    Saved radar
+                  </p>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                    Pin the briefs you want to revisit quickly from your command lane.
+                  </p>
+                </div>
+                <Link href="/watchlist" className="btn-primary">
+                  Open saved radar
+                </Link>
+              </div>
+            </div>
           ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -198,20 +352,77 @@ export default function ProjectsPage() {
                 Clients see applications in real time. Students can reapply after a rejection with a
                 stronger note and updated portfolio story.
               </div>
+
+              <div className="rail-card flex flex-wrap items-center justify-between gap-3 p-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                    Saved radar
+                  </p>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                    Keep standout briefs nearby so you can return without hunting through the board.
+                  </p>
+                </div>
+                <Link href="/watchlist" className="btn-primary">
+                  Open saved radar
+                </Link>
+              </div>
             </div>
           )}
         </section>
 
         <section className="grid gap-4">
+          <div className="command-surface p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="data-kicker">Search ops</p>
+                <h2 className="mt-2 text-xl font-semibold text-slate-900 dark:text-white">
+                  Filter the live brief board
+                </h2>
+              </div>
+              <Link href="/watchlist" className="control-pill">
+                Open radar
+              </Link>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-[1.2fr,0.8fr,auto]">
+              <input
+                value={queryText}
+                onChange={(event) => setQueryText(event.target.value)}
+                className="field-shell w-full"
+                placeholder="Search title, brief details, or required skills"
+              />
+              <select
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+                className="field-shell w-full"
+              >
+                <option value="all">All statuses</option>
+                <option value="open">Open</option>
+                <option value="in-progress">In progress</option>
+                <option value="completed">Completed</option>
+              </select>
+              <button
+                type="button"
+                className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-brand-300 hover:text-brand-600 dark:border-slate-700 dark:text-slate-200"
+                disabled={savingSearch}
+                onClick={() => void handleSaveSearch()}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <BellPlus size={15} />
+                  {savingSearch ? 'Saving alert...' : 'Save search alert'}
+                </span>
+              </button>
+            </div>
+          </div>
+
           {loading ? (
             <div className="rail-card p-5 text-sm text-slate-500 dark:text-slate-300">Loading projects...</div>
-          ) : projects.length === 0 ? (
+          ) : filteredProjects.length === 0 ? (
             <div className="rail-card p-6 text-sm text-slate-500 dark:text-slate-300">
-              No projects yet. Start by creating a brief or checking back once the marketplace is
-              populated.
+              No projects match the current filters. Try widening your search or saving this setup as an alert for later.
             </div>
           ) : (
-            projects.map((project) => {
+            filteredProjects.map((project) => {
               const projectApplications = applicationMap[project.id] || [];
               const myApplication = myApplicationByProject[project.id];
 
@@ -226,6 +437,27 @@ export default function ProjectsPage() {
                         {project.priority ? (
                           <span className="badge capitalize">{project.priority}</span>
                         ) : null}
+                        <button
+                          type="button"
+                          onClick={() => void handleToggleSaved(project)}
+                          disabled={workingId === `save-${project.id}`}
+                          className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold transition ${
+                            savedProjectIds.includes(project.id)
+                              ? 'bg-brand-500 text-white shadow-[0_12px_30px_rgba(14,165,233,0.28)]'
+                              : 'border border-slate-200 bg-white/85 text-slate-700 hover:border-brand-300 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-200'
+                          }`}
+                        >
+                          {savedProjectIds.includes(project.id) ? (
+                            <BookmarkCheck size={14} />
+                          ) : (
+                            <Bookmark size={14} />
+                          )}
+                          {workingId === `save-${project.id}`
+                            ? 'Saving...'
+                            : savedProjectIds.includes(project.id)
+                              ? 'Saved'
+                              : 'Save'}
+                        </button>
                       </div>
                       <h2 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">
                         {project.title}
@@ -264,6 +496,17 @@ export default function ProjectsPage() {
                       }}
                     />
                   </div>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Link href={`/projects/${project.id}` as Route} className="btn-primary">
+                      Open brief
+                    </Link>
+                    <Link
+                      href={'/watchlist' as Route}
+                      className="rounded-2xl border border-slate-200/80 bg-white/75 px-4 py-2.5 text-center text-sm font-semibold text-slate-800 transition hover:border-brand-300 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-950/60 dark:text-slate-100"
+                    >
+                      View saved radar
+                    </Link>
+                  </div>
 
                   {role === 'client' ? (
                     <div className="mt-6 grid gap-4 xl:grid-cols-[0.9fr,1.1fr]">
@@ -284,7 +527,7 @@ export default function ProjectsPage() {
                               onClick={async () => {
                                 setWorkingId(project.id);
                                 try {
-                                  await updateProjectStatus(project.id, status);
+                                  await updateProjectStatus(project.id, status, userId || undefined);
                                   setProjects((current) =>
                                     current.map((item) =>
                                       item.id === project.id ? { ...item, status } : item
@@ -406,5 +649,13 @@ export default function ProjectsPage() {
         </section>
       </div>
     </AppShell>
+  );
+}
+
+export default function ProjectsPage() {
+  return (
+    <Suspense fallback={<AppShell><div className="card p-6 text-sm text-slate-500 dark:text-slate-300">Loading project board...</div></AppShell>}>
+      <ProjectsPageClient />
+    </Suspense>
   );
 }
