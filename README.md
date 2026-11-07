@@ -1,331 +1,286 @@
-# Collabthon Platform
+# Collabathon
 
-## Overview
+Collabathon is a premium full-stack collaboration platform for students, clients, and admins. It combines role-shaped authentication, talent discovery, project publishing, realtime messaging, team workspaces, billing, moderation, and audit automation into one Firebase-backed product.
 
-The Collabthon Platform is a comprehensive student collaboration platform designed to connect college students for project-based learning, skill sharing, and professional networking. Built with FastAPI and modern web technologies, it offers enterprise-level features with a focus on scalability, security, and user experience.
+## Stack
 
-## 🚀 Features
+- Frontend: Next.js 16 App Router, React 19, Tailwind CSS
+- Backend: Firebase Authentication, Firestore, Storage, Cloud Functions
+- Billing: Stripe Checkout, Billing Portal, Webhooks
+- Security: Firestore rules, role-aware routing, Firebase Admin writes for server/webhook flows
+- Analytics + add-ons: GA4, reCAPTCHA, Resend, Google Maps/Vision/Translate scaffolding
 
-### Core Features
-- **Student Collaboration Matching**: Intelligent algorithm to match students based on skills, interests, and project goals
-- **User Authentication**: JWT-based authentication with refresh tokens and Google OAuth 2.0
-- **Profile Management**: Detailed student profiles with skills, experience, and education
-- **Project Management**: Post, discover, and collaborate on projects
-- **Collaboration System**: Request-based collaboration with messaging
-- **Subscription Plans**: Free, Professional, and Enterprise tiers with Stripe integration
-- **Real-time Notifications**: Instant updates on project invitations, messages, and collaboration requests
+## Product Surface
 
-### Advanced Features
-- **Google Cloud Integration**: 
-  - Google OAuth 2.0: Secure user authentication with Google accounts
-  - Google reCAPTCHA: Advanced bot protection and security
-  - Google Cloud Storage: Scalable file and media storage
-  - Google Vision API: Image analysis and processing capabilities
-  - Google Maps API: Location-based services and geolocation tracking
-  - Google Translate API: Multi-language support and translation services
-  - Google Analytics 4: Comprehensive user behavior tracking
-- **Advanced Search & Filtering**: Sophisticated search with multiple filters
-- **Real-time Analytics**: User activity tracking and platform insights
-- **Payment Integration**: Stripe for subscription management
-- **Email Marketing**: Campaign management and tracking
-- **Admin Dashboard**: Comprehensive admin tools for platform management
-- **Multi-language Support**: Internationalization capabilities
-- **Location-based Services**: Geographic features using Google Maps
-- **Accessibility Compliance**: WCAG compliant interface
-- **Performance Optimization**: Caching, CDN, and optimization strategies
+### Core user lanes
+- Student lane: profile builder, teammate discovery, project applications, realtime chat, notifications
+- Client lane: company profile, project briefs, applicant review, team creation, workspace execution
+- Admin lane: platform moderation, account review, project moderation, audit trail, marketplace health
 
-### UI/UX Features
-- **Responsive Design**: Works on all device sizes
-- **Dark/Light Theme**: User preference-based theming
-- **Animations**: Smooth transitions and micro-interactions
-- **SEO Optimized**: Proper meta tags and structured data
+### Advanced layers
+- Team workspace: sprints, Kanban board, task flow, workspace metrics
+- Billing: subscription plans, Stripe Checkout, customer portal, Firestore subscription sync
+- Trust + governance: audit logs, moderation actions, Cloud Functions automation
 
-## ☁️ Google Cloud Services Integration
+## Main Routes
 
-- **Google OAuth 2.0**: Secure user authentication with Google accounts
-- **Google reCAPTCHA**: Advanced bot protection and security
-- **Google Cloud Storage**: Scalable file and media storage
-- **Google Vision API**: Image analysis and processing capabilities
-- **Google Maps API**: Location-based services and geolocation tracking
-- **Google Translate API**: Multi-language support and translation services
-- **Google Analytics 4**: Comprehensive user behavior tracking and analytics
+### Public
+- `/` landing page
+- `/sign-in` role portal chooser
+- `/sign-up` role signup chooser
+- `/student/login`
+- `/student/signup`
+- `/client/login`
+- `/client/signup`
+- `/admin-login`
 
-## 💻 Tech Stack
+### App
+- `/dashboard`
+- `/dashboard/user`
+- `/dashboard/client`
+- `/dashboard/admin`
+- `/profile`
+- `/students`
+- `/students/[id]`
+- `/projects`
+- `/workspace`
+- `/messages`
+- `/notifications`
+- `/billing`
+- `/admin`
 
-### Backend
-- **Framework**: FastAPI (Python 3.13+)
-- **Database**: MySQL with SQLAlchemy ORM
-- **Authentication**: JWT tokens with secure hashing
-- **Async Processing**: Celery with Redis broker
-- **Caching**: Redis for performance optimization
+### API routes
+- `/api/stripe/checkout`
+- `/api/stripe/portal`
+- `/api/stripe/webhook`
+- `/api/recaptcha`
+- `/api/email/subscribe`
+- `/api/translate`
+- `/api/vision`
 
-### Frontend
-- **Framework**: Vanilla JavaScript (ES6+)
-- **Build Tool**: Vite
-- **Styling**: CSS3 with responsive design
-- **Icons**: Material Icons
-- **Fonts**: Google Fonts
+## Key Files
 
-### Infrastructure
-- **Database**: MySQL 8.0+
-- **Cache**: Redis 6.0+
-- **Message Queue**: Celery with Redis backend
-- **Deployment**: Docker-ready configuration
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/app/` app routes
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/components/layout/app-shell.tsx` role-aware shell and navigation
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/components/auth/role-sign-in-form.tsx` role login UI and routing
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/components/auth/role-sign-up-form.tsx` role signup UI and profile seeding
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/lib/firestore.ts` Firestore data layer
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/lib/firebase.ts` client Firebase bootstrap
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/lib/firebase-admin.ts` Firebase Admin bootstrap for server/webhook writes
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/lib/billing.ts` plan metadata and Stripe price resolution
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/firestore.rules` production rules
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/firestore.indexes.json` Firestore indexes
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/storage.rules` Storage rules
+- `/Users/rohanmahendrashelar/Desktop/collab/collabthon/functions/index.js` Cloud Functions automations
 
-## Architecture
+## Local Setup
 
-### Backend Structure
-```
-collabthon-backend/
-├── app/
-│   ├── api/              # API route definitions
-│   ├── models/           # Database models
-│   ├── schemas/          # Pydantic schemas
-│   ├── core/             # Core application logic
-│   ├── database.py       # Database configuration
-│   ├── utils/            # Utility functions
-│   └── static/           # Static files
-├── docs/                 # Documentation
-├── tests/                # Test files
-├── requirements.txt      # Dependencies
-├── run.py                # Application runner
-└── README.md
-```
-
-### Frontend Structure
-```
-collabthon-clean/
-├── index.html            # Main HTML file
-├── styles.css            # Styling
-├── integrated.js         # Main JavaScript functionality
-├── api.js                # API client
-└── script.js             # Additional scripts
-```
-
-## Setup Instructions
-
-### Prerequisites
-- Python 3.9+
-- MySQL 8.0+
-- Node.js (for development tools)
-- Git
-
-### Backend Setup
-
-1. **Clone the repository:**
+### 1. Install dependencies
 ```bash
-git clone https://github.com/rohanshelar991/collabthon.git
-cd collabthon-backend
+cd /Users/rohanmahendrashelar/Desktop/collab/collabthon
+npm install
 ```
 
-2. **Create virtual environment:**
+### 2. Create env file
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+cp .env.example .env.local
 ```
 
-3. **Install dependencies:**
+### 3. Run dev server
 ```bash
-pip install -r requirements.txt
+npm run dev
 ```
 
-4. **Set up environment variables:**
-Create a `.env` file in the project root:
-```env
-DATABASE_URL=mysql+pymysql://username:password@localhost/collabthon_db
-SECRET_KEY=your-super-secret-key-change-in-production
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_RECAPTCHA_SECRET=your-recaptcha-secret
-GOOGLE_MAPS_API_KEY=your-google-maps-api-key
-GOOGLE_TRANSLATE_API_KEY=your-translate-api-key
-STRIPE_PUBLISHABLE_KEY=your-stripe-publishable-key
-STRIPE_SECRET_KEY=your-stripe-secret-key
-STRIPE_WEBHOOK_SECRET=your-stripe-webhook-secret
-SMTP_USERNAME=your-smtp-username
-SMTP_PASSWORD=your-smtp-password
-```
-
-5. **Initialize the database:**
+### 4. Production build
 ```bash
-python -c "from app.database import engine, Base; Base.metadata.create_all(bind=engine)"
+npm run build
 ```
 
-6. **Start the development server:**
-```bash
-python run.py
-# Or using uvicorn directly:
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+The build is configured to use webpack because this machine currently falls back to WASM when the native SWC binary is unavailable.
 
-### Frontend Setup
+## Environment Variables
 
-The frontend is served statically. Simply open `index.html` in a browser or serve it using any HTTP server.
+See `/Users/rohanmahendrashelar/Desktop/collab/collabthon/.env.example` for the full list.
 
-For development:
-```bash
-cd collabthon-clean
-python -m http.server 3000
-```
+### Deployment base URL
+- `NEXT_PUBLIC_APP_URL`
+- `APP_URL`
 
-## API Endpoints
+### Firebase web config
+- `NEXT_PUBLIC_FIREBASE_API_KEY`
+- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `NEXT_PUBLIC_FIREBASE_DATABASE_URL`
+- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `NEXT_PUBLIC_FIREBASE_APP_ID`
+- `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`
+
+### Stripe
+- `STRIPE_SECRET_KEY`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_STRIPE_PRICE_STARTER`
+- `NEXT_PUBLIC_STRIPE_PRICE_PRO`
+- `NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE`
+- `STRIPE_WEBHOOK_SECRET`
+
+### Firebase Admin for webhook/server writes
+- `FIREBASE_ADMIN_PROJECT_ID`
+- `FIREBASE_ADMIN_CLIENT_EMAIL`
+- `FIREBASE_ADMIN_PRIVATE_KEY`
+
+### Google + platform integrations
+- `NEXT_PUBLIC_GA4_MEASUREMENT_ID`
+- `NEXT_PUBLIC_GOOGLE_RECAPTCHA_SITE_KEY`
+- `GOOGLE_RECAPTCHA_SECRET`
+- `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+- `GOOGLE_VISION_API_KEY`
+- `GOOGLE_TRANSLATE_API_KEY`
+- `RESEND_API_KEY`
+- `EMAIL_FROM`
+
+## Firebase Setup Checklist
 
 ### Authentication
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/register` - User registration
-- `POST /api/v1/auth/google` - Google OAuth login
-- `GET /api/v1/auth/me` - Get current user info
-- `POST /api/v1/auth/logout` - User logout
+Enable in Firebase Console:
+- Email/Password
+- Google
 
-### Users
-- `GET /api/v1/users/` - Get all users
-- `GET /api/v1/users/{user_id}` - Get specific user
-- `PUT /api/v1/users/{user_id}` - Update user profile
-- `DELETE /api/v1/users/{user_id}` - Delete user
-
-### Profiles
-- `GET /api/v1/profiles/` - Get all profiles
-- `GET /api/v1/profiles/{user_id}` - Get specific profile
-- `PUT /api/v1/profiles/{user_id}` - Update profile
-- `POST /api/v1/profiles/upload-photo` - Upload profile photo
-
-### Projects
-- `GET /api/v1/projects/` - Get all projects
-- `POST /api/v1/projects/` - Create new project
-- `GET /api/v1/projects/{project_id}` - Get specific project
-- `PUT /api/v1/projects/{project_id}` - Update project
-- `DELETE /api/v1/projects/{project_id}` - Delete project
-
-### Collaborations
-- `POST /api/v1/collaborations/request` - Send collaboration request
-- `PUT /api/v1/collaborations/{request_id}/respond` - Respond to request
-- `GET /api/v1/collaborations/my-requests` - Get my collaboration requests
-- `GET /api/v1/collaborations/my-collaborations` - Get my collaborations
-
-### Subscriptions
-- `GET /api/v1/subscriptions/plans` - Get available plans
-- `POST /api/v1/payments/create-checkout-session` - Create Stripe checkout
-- `GET /api/v1/payments/subscription-status` - Get subscription status
-- `POST /api/v1/payments/upgrade-subscription` - Upgrade subscription
-- `POST /api/v1/payments/cancel-subscription` - Cancel subscription
-
-### Analytics
-- `POST /api/v1/analytics/track-activity` - Track user activity
-- `GET /api/v1/analytics/analytics/user-activity` - Get user activity (admin)
-- `GET /api/v1/analytics/analytics/user-activity/stats` - Get activity stats
-- `POST /api/v1/analytics/location-track` - Track user location
-- `GET /api/v1/analytics/analytics/location-data` - Get location data (admin)
-- `GET /api/v1/analytics/reports` - Get all reports (admin)
-- `POST /api/v1/analytics/reports/generate` - Generate new report
-
-### Notifications
-- `GET /api/v1/notifications/` - Get user notifications
-- `PUT /api/v1/notifications/{notification_id}/read` - Mark notification as read
-- `DELETE /api/v1/notifications/{notification_id}` - Delete notification
-
-### Search
-- `GET /api/v1/search/projects` - Search projects
-- `GET /api/v1/search/users` - Search users
-- `GET /api/v1/search/advanced` - Advanced search with filters
-
-### Utilities
-- `GET /health` - Health check
-- `GET /docs` - API documentation (Swagger UI)
-- `GET /redoc` - API documentation (ReDoc)
-
-## 🔐 Security Features
-
-- **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt for secure password storage
-- **Rate Limiting**: Protection against brute force attacks
-- **Input Validation**: Comprehensive validation and sanitization
-- **SQL Injection Prevention**: ORM-based queries with parameterized inputs
-- **XSS Protection**: Content security policies and output encoding
-- **Google reCAPTCHA**: Bot protection on critical endpoints
-- **Secure Headers**: Proper HTTP security headers
-
-## 📊 Analytics and Monitoring
-
-- **User Activity Tracking**: Comprehensive event logging
-- **Geolocation Analytics**: Location-based insights
-- **Engagement Metrics**: Detailed user engagement tracking
-- **Performance Monitoring**: API response time tracking
-- **Error Tracking**: Comprehensive error logging and monitoring
-
-## 🧪 Testing
-
-To run the comprehensive test suite:
-
+### Firestore
+- Create the Firestore database
+- Deploy rules:
 ```bash
-python comprehensive_test.py
+firebase deploy --only firestore:rules
+```
+- Deploy indexes if needed:
+```bash
+firebase deploy --only firestore:indexes
 ```
 
-This runs end-to-end tests covering all major functionality including:
-- API health and connectivity
-- Database operations
-- Authentication and authorization
-- Google Cloud services integration
-- Payment gateway functionality
-- Notification system
-- Search capabilities
+### Storage
+- Enable Firebase Storage in the console
+- Deploy rules:
+```bash
+firebase deploy --only storage
+```
+
+### Cloud Functions
+From `/Users/rohanmahendrashelar/Desktop/collab/collabthon/functions`:
+```bash
+npm install
+firebase deploy --only functions
+```
+
+## Stripe Setup
+
+### Create products and prices
+Create three recurring Stripe prices and copy the IDs into:
+- `NEXT_PUBLIC_STRIPE_PRICE_STARTER`
+- `NEXT_PUBLIC_STRIPE_PRICE_PRO`
+- `NEXT_PUBLIC_STRIPE_PRICE_ENTERPRISE`
+
+### Local webhook testing
+With the Stripe CLI:
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+Copy the webhook secret into `STRIPE_WEBHOOK_SECRET`.
+
+### Production webhook
+Create a Stripe webhook pointing to:
+- `https://YOUR_DOMAIN/api/stripe/webhook`
+
+Subscribe to:
+- `checkout.session.completed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+
+## Cloud Functions Included
+
+Defined in `/Users/rohanmahendrashelar/Desktop/collab/collabthon/functions/index.js`:
+- `setUserRole` callable
+- `refreshRole` callable
+- `seedWorkspaceOnTeamCreate`
+- `logApplicationLifecycle`
+- `notifyTaskAssignees`
+- `syncSubscriptionNotifications`
+
+These functions seed workspace assets, write audit logs, and create system notifications around important lifecycle events.
+
+## Firestore Collections
+
+Primary collections used by the app:
+- `users`
+- `students`
+- `clients`
+- `projects`
+- `applications`
+- `teams`
+- `sprints`
+- `teamTasks`
+- `messages`
+- `reviews`
+- `notifications`
+- `subscriptions`
+- `auditLogs`
+
+See `/Users/rohanmahendrashelar/Desktop/collab/collabthon/docs/firestore-schema.md` for the full schema and index notes.
+
+## Security Model
+
+- Role is stored in `users/{uid}.role`
+- Account safety state is stored in `users/{uid}.accountStatus`
+- Firestore rules gate access by role, account status, ownership, and team membership
+- Hidden projects are readable only by admins or the owning client
+- Subscription records are writable only by trusted server/admin paths
+- Audit logs are readable by admins only
 
 ## Deployment
 
-### Production Deployment
-1. Use environment variables for configuration
-2. Set up a reverse proxy (nginx/Apache)
-3. Configure SSL certificates
-4. Use process managers (gunicorn/supervisor)
-5. Set up monitoring and logging
+### Vercel
+- Import the repo into Vercel
+- Add all env vars from `.env.example`
+- Ensure Firebase Admin env vars are present for billing webhooks
+- Deploy normally using the Next.js preset
 
-### Docker Deployment
-A Dockerfile and docker-compose.yml are included for containerized deployment.
-
-## Development Guidelines
-
-### Code Style
-- Follow PEP 8 guidelines
-- Use type hints for all functions
-- Write docstrings for public functions
-- Use descriptive variable names
-
-### Git Workflow
-1. Create feature branches
-2. Write tests for new features
-3. Submit pull requests for review
-4. Follow semantic commit messages
-
-### Testing
-Run tests using pytest:
+### Firebase
+If you want Firebase-managed rules/functions deployment:
 ```bash
-pytest tests/
+firebase login
+firebase use collabthon
+firebase deploy --only firestore:rules,firestore:indexes,storage,functions
 ```
 
-## Contributing
+### Recommended production flow
+1. Deploy the Next app to Vercel
+2. Deploy Firestore rules/indexes and Storage rules with Firebase CLI
+3. Deploy Cloud Functions
+4. Add the production Stripe webhook
+5. Verify checkout, billing portal, workspace creation, moderation actions, and notifications
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### Vercel production note
+- Set both `NEXT_PUBLIC_APP_URL` and `APP_URL` to your production domain, for example `https://collabthon.com`
+- Stripe checkout and the billing portal now use these values for success, cancel, and return URLs
+- Production deploys should also include the Firebase Admin env vars because server routes fail fast when they are missing
 
-## Support
+## Production Checklist
 
-- **Documentation**: Check the `/docs` directory
-- **Issues**: Report bugs and feature requests on GitHub
-- **Community**: Join our Discord for discussions
+- Firebase Auth providers enabled
+- Firestore created and rules deployed
+- Storage enabled and rules deployed
+- Admin user exists in `users/{uid}` with `role = admin`
+- Stripe products + prices created
+- Stripe webhook configured
+- Firebase Admin env vars added to Vercel
+- Cloud Functions deployed
+- `npm run build` passes
 
-## License
+## Notes
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Authors
-
-- Rohan Shelar - Initial work and primary development
-
-## Acknowledgments
-
-- FastAPI community for excellent documentation and examples
-- Google Cloud Platform for comprehensive services
-- Stripe for payment processing solutions
-- All contributors and beta testers
+- The app includes some Google integration scaffolding that can be enabled incrementally as keys are added.
+- The repo still shows a non-blocking `baseline-browser-mapping` warning during builds. Updating it is safe:
+```bash
+npm i baseline-browser-mapping@latest -D
+```
+- If the native SWC package is missing on this machine, the configured webpack build path still succeeds.

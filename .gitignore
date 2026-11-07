@@ -346,3 +346,8 @@ Thumbs.db:encryptable
 iCloudPhotos.DB
 iCloudSync.db
 .Dragonden
+
+# Next.js app
+/.next
+/.firebase/
+.vercel
