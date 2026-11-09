@@ -474,6 +474,13 @@ export default function Home() {
               >
                 Open dashboard preview
               </Link>
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/14"
+              >
+                Contact the team
+                <ArrowRight size={16} />
+              </Link>
             </div>
           </div>
         </section>
